@@ -56,3 +56,17 @@ o("array", async function () {
     inline: ['x', 'y', 'z'],
   })
 })
+
+
+o.spec("Syntactic features", function () {
+
+  o("single-line string", async function () {
+    var result = await parse(`
+      items alice "big bob" robot
+    `, {
+      items: '$list',
+    })
+
+    o(result).deepEquals({ items: ['alice', 'big bob', 'robot'] })
+  })
+})

@@ -172,6 +172,14 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
         continue
       }
 
+      // Quoted strings
+      else if (c === '"') {
+        let [str, newIndex] = getQuotedString(source, i+1)
+        i = newIndex-1
+        state.args.push(str)
+        console.log("ARG COMPLETE", str)
+      }
+
       // Argument complete
       else if (c !== ' ') {
         // i = skip(/ /, source, i)
@@ -313,6 +321,19 @@ function executeSchema(schema: Schema, start: number, statement: Statement) {
   else {
     throw new ZamlError('unexpected-error', start, "Shouldn't be possible.")
   }
+}
+
+function getQuotedString (source: string, start: number): [string,number] {
+  var end = start
+  console.log("quote", end, `[${source[end]}]`)
+  // TODO: Support backslash quotes
+  while (end < source.length && source[end] !== '"') {
+    end += 1
+  }
+  if (end === source.length) {
+    throw new ZamlError('syntax-error', start-1, `Unexpected EOF: Missing end quote`)
+  }
+  return [source.substring(start, end), end+1]
 }
 
 function getWordUntil (r: RegExp, source: string, start: number): [string,number] {
