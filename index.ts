@@ -46,7 +46,7 @@ function createSchema (definitions: any) {
   var schema: Schema = {}
   for (var key in definitions) {
     if (reservedOps.test(key[0])) {
-      throw new ZamlError('author-error', `The key (${key}) is invalid: ${key[0]} is a reserved word.`)
+      throw new ZamlError('author-error', 0, `The key (${key}) is invalid: ${key[0]} is a reserved word.`)
     }
     let t = definitions[key]
     if (t === '$num' || t === '$str') {
@@ -63,7 +63,7 @@ function createSchema (definitions: any) {
       schema[key] = { name: '$block', schema: createSchema(t) }
     }
     else {
-      throw new ZamlError('author-error', `Invalid schema type: ${t}`)
+      throw new ZamlError('author-error', 0, `Invalid schema type: ${t}`)
     }
   }
   return schema
@@ -127,7 +127,7 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
         (c === '\n')
       ) {
         console.log("STATEMENT COMPLETE")
-        result[state.name] = executeSchema(schema, { name: state.name, args: state.args })
+        result[state.name] = executeSchema(schema, i, { name: state.name, args: state.args })
         console.log("  >", result[result.length-1])
         state = END_STATEMENT
       }
@@ -156,7 +156,7 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
           result[state.name] = list
         }
         else {
-          throw new ZamlError('user-error', `Config key '${state.name}' does not take a block`)
+          throw new ZamlError('user-error', i, `Config key '${state.name}' does not take a block`)
         }
         // Blocks and hashes must be followed by a newline
         state = SEEKING_NEWLINE
@@ -177,8 +177,8 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
         // i = skip(/ /, source, i)
         let [arg, newIndex] = getWordUntil(whitespaceOrBracket, source, i)
         i = newIndex-1
-        console.log("ARG COMPLETE", arg)
         state.args.push(arg)
+        console.log("ARG COMPLETE", arg)
       }
     }
     else if (state.mode === 'seeking-newline') {
@@ -242,12 +242,12 @@ function parseHash(source: string, start: number): [object, number] {
       console.log("????", `[${source[keyEnd]}] [${source.substring(keyEnd-1,keyEnd+2)}]`)
 
       if (source[keyEnd] !== ' ') {
-        throw new ZamlError('user-error', `Space is required after key: ${key}`)
+        throw new ZamlError('user-error', keyEnd, `Space is required after key: ${key}`)
       }
       let valStart = skip(/ /, source, keyEnd)
 
       if (source[valStart] === '\r' || source[valStart] === '\n') {
-        throw new ZamlError('user-error', `Value is required after key: ${key}`)
+        throw new ZamlError('user-error', keyEnd, `Value is required after key: ${key}`)
       }
 
       h = valStart-1
@@ -293,14 +293,14 @@ function parseList(source: string, start: number): [string[], number] {
   return [list, source.length]
 }
 
-function executeSchema(schema: Schema, statement: Statement) {
+function executeSchema(schema: Schema, start: number, statement: Statement) {
   var t = schema[statement.name]
   if ( ! t ) {
-    throw new ZamlError('user-error', `No such config: ${statement.name}`)
+    throw new ZamlError('user-error', start, `No such config: ${statement.name}`)
   }
   if (t.name === '$num') {
     if (statement.args.length !== 1) {
-      throw new ZamlError('user-error', `Config key ${statement.name} takes exactly 1 number value`)
+      throw new ZamlError('user-error', start, `Config key ${statement.name} takes exactly 1 number value`)
     }
     return parseInt(statement.args[0], 10)
   }
@@ -311,7 +311,7 @@ function executeSchema(schema: Schema, statement: Statement) {
     return statement.args
   }
   else {
-    throw new ZamlError('unexpected-error', "Shouldn't be possible.")
+    throw new ZamlError('unexpected-error', start, "Shouldn't be possible.")
   }
 }
 
@@ -375,7 +375,7 @@ type ZamlErrorType
   | 'unexpected-error'
 
 class ZamlError extends Error {
-  constructor(public type: ZamlErrorType, message: string) {
+  constructor(public type: ZamlErrorType, public i: number, message: string) {
     super(`[ZamlError] ${message}`)
   }
 }
