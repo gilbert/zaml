@@ -7,9 +7,9 @@ o("basic types", function () {
     y hello
     z one two
   `, {
-    x: '$num',
-    y: '$str',
-    z: '$str',
+    x: 'num',
+    y: 'str',
+    z: 'str',
   })
 
   o(result.x).equals(10)
@@ -27,7 +27,7 @@ o("kv", function () {
     }
   `, {
     one: {
-      two: '$kv'
+      two: 'kv'
     },
   })
 
@@ -47,8 +47,8 @@ o("list", function () {
     }
     inline x y z
   `, {
-    items: '$list',
-    inline: '$list',
+    items: 'list',
+    inline: 'list',
   })
 
   o(result).deepEquals({
@@ -58,7 +58,7 @@ o("list", function () {
 })
 
 
-o("$multi", function () {
+o("multi", function () {
   var result = parse(`
     project {
       title My Project 1
@@ -69,9 +69,9 @@ o("$multi", function () {
       tag cool
     }
   `, {
-    project$multi: {
-      title: '$str',
-      tag$multi: '$str',
+    'project|multi': {
+      title: 'str',
+      'tag|multi': 'str',
     }
   })
 
@@ -89,7 +89,7 @@ o.spec("Syntactic features", function () {
     var result = parse(`
       items alice "big bob" robot
     `, {
-      items: '$list',
+      items: 'list',
     })
 
     o(result).deepEquals({ items: ['alice', 'big bob', 'robot'] })
@@ -105,7 +105,7 @@ o.spec("Syntactic features", function () {
         e
       }
     `, {
-      items: '$list'
+      items: 'list'
     })
 
     o(result).deepEquals({ items: ['a','c','e'] })

@@ -14,11 +14,11 @@ type Statement = {
 }
 
 type ValueType
-  = ({ name: '$num' }
-  | { name: '$str' }
-  | { name: '$kv' }
-  | { name: '$list' }
-  | { name: '$namespace', schema: Schema }
+  = ({ name: 'num' }
+  | { name: 'str' }
+  | { name: 'kv' }
+  | { name: 'list' }
+  | { name: 'namespace', schema: Schema }
   ) & { multi: boolean }
 
 type Schema = Record<string,ValueType>
@@ -133,7 +133,7 @@ function createSchema (definitions: any) {
     }
 
     // Extract key attributes
-    let [configName, ...attrs] = key.split('$')
+    let [configName, ...attrs] = key.split('|')
     let multi = attrs.indexOf('multi') >= 0
 
     // Strip attrs from key so source code matches up
@@ -144,17 +144,17 @@ function createSchema (definitions: any) {
     }
 
     let t = definitions[configName]
-    if (t === '$num' || t === '$str') {
+    if (t === 'num' || t === 'str') {
       schema[key] = { name: t, multi }
     }
-    else if (t === '$kv') {
+    else if (t === 'kv') {
       schema[key] = { name: t, multi }
     }
-    else if (t === '$list') {
+    else if (t === 'list') {
       schema[key] = { name: t, multi }
     }
     else if (isObj(t)) {
-      schema[key] = { name: '$namespace', schema: createSchema(t), multi }
+      schema[key] = { name: 'namespace', schema: createSchema(t), multi }
     }
     else {
       throw new ZamlError('author-error', null, `Invalid schema type: ${t}`)
@@ -187,13 +187,13 @@ function parseZaml (source: string, schema: Schema, statements: Statement[]): Pa
       ? (val: any) => { result[name].push(val) }
       : (val: any) => { result[name] = val }
 
-    if (t.name === '$num') {
+    if (t.name === 'num') {
       assign(Number(s.args))
     }
-    else if (t.name === '$str') {
+    else if (t.name === 'str') {
       assign(s.args)
     }
-    else if (t.name === '$list') {
+    else if (t.name === 'list') {
       if (s.block) {
         if (s.args.length !== 1) {
           throw new ZamlError('user-error', s.argsPos[0],
@@ -221,7 +221,7 @@ Examples:
         assign(parseArgs(source, s.argsPos[0], s.argsPos[1]))
       }
     }
-    else if (t.name === '$kv') {
+    else if (t.name === 'kv') {
       var hash: Record<string,string> = {}
       if (s.block) {
         for (let s2 of s.block) {
@@ -233,7 +233,7 @@ Examples:
       }
       assign(hash)
     }
-    else if (t.name === '$namespace') {
+    else if (t.name === 'namespace') {
       if (! s.block) {
         console.log("???", s)
         throw new ZamlError('user-error', s.pos, `Namespace '${s.name}' requires a block.`)
@@ -241,7 +241,7 @@ Examples:
       assign(parseZaml(source, t.schema, s.block))
     }
     else {
-      throw new ZamlError('unexpected-error', null, "Shouldn't be possible.")
+      throw new ZamlError('unexpected-error', null, `Shouldn't be possible (${t.name})`)
     }
   }
 
