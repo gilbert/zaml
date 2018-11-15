@@ -38,7 +38,7 @@ o("hash", async function () {
   })
 })
 
-o("array", async function () {
+o("list", async function () {
   var result = await parse(`
     items {
       one
