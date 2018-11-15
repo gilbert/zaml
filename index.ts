@@ -1,10 +1,10 @@
 
 const newline = /(\n)|(\n\r)/
 const brackets = /[\(\)\{\}\[\]]/
-const separator = /(\n)|(\n\r)|[}]/
+const separator = /(\n)|(\n\r)|[};]/
 const whitespace = /[ \t\n\r]/
 const reservedOps = /[\^&#@~`$]/
-const trailingSpaces = / *$/
+const trailingSpaces = /[ \t]*$/
 const whitespaceOrBracket = /[ \t\n\r{]/
 
 type State
@@ -19,8 +19,12 @@ const BLOCK: State = { mode: 'block' }
 const SEEKING_NEWLINE: State = { mode: 'seeking-newline' }
 const END_STATEMENT: State = { mode: 'end-statement' }
 
-type Arg = string
-type Statement = { name: string, args: Arg[], block?: Statement[] }
+type Pos = { line: number, col: number }
+
+type Arg = { type: 'arg', source: string } & Pos
+type Statement = { type: 'statement', name: string, args: Arg[], block?: Statement[] } & Pos
+
+type Node = Statement | Arg
 
 type ParseError
   = { type: 'syntax-error', reason: string, i: number }
@@ -30,16 +34,24 @@ type ValueType
   | { name: '$str' }
   | { name: '$hash' }
   | { name: '$list' }
-  | { name: '$block', schema: Schema }
+  | { name: '$namespace', schema: Schema }
 
 type Schema = Record<string,ValueType>
 
 type ParseResult = any
 
-
 export async function parse (source: string, definitions: any) {
-  var results = parseZaml(source, createSchema(definitions), NEUTRAL, 0)
-  return results[0]
+  try {
+    var program = lex()
+    var results = parseZaml(source, createSchema(definitions), NEUTRAL, 0)
+    return results[0]
+  }
+  catch (e) {
+    if (e instanceof ZamlError) {
+      e.addSource(source)
+    }
+    throw e
+  }
 }
 
 function createSchema (definitions: any) {
@@ -60,7 +72,7 @@ function createSchema (definitions: any) {
       schema[key] = { name: t }
     }
     else if (isObj(t)) {
-      schema[key] = { name: '$block', schema: createSchema(t) }
+      schema[key] = { name: '$namespace', schema: createSchema(t) }
     }
     else {
       throw new ZamlError('author-error', 0, `Invalid schema type: ${t}`)
@@ -87,7 +99,7 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
       // We have a block after all!
       // Revert state back to action mode.
       console.log("REVERT")
-      var last = result.pop()
+      let last = result.pop()
       if (! last) {
         throw new Error(`AssertionError: No statement on end-statement`)
       }
@@ -103,12 +115,12 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
 
       // Reserve key operators
       if (reservedOps.test(c)) {
-        throw { type: 'syntax-error', reason: `Character ${c} is a reserved word`, i }
+        throw new ZamlError('syntax-error', i, `Character ${c} is a reserved word`)
       }
 
       // Whitelist errors
       if (brackets.test(c)) {
-        throw { type: 'syntax-error', reason: `Unexpected ${c}`, i }
+        throw new ZamlError('syntax-error', i, `Unexpected ${c}`)
       }
 
       // >>Here is where you would add new syntactic features<<
@@ -116,8 +128,52 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
       // Begin statement
       let [name, newIndex] = getWordUntil(whitespace, source, i)
       console.log(`>>>> ${name}`, newIndex, `(from from [${c}]:${i})`)
-      i = newIndex-1
-      state = { mode: 'statement', name, args: [] }
+      i = skip(/ /, source, newIndex)
+      // state = { mode: 'statement', name, args: [] }
+
+      let t = schema[name]
+      console.log("STATEMENT", name, t)
+      if ( ! t ) {
+        throw new ZamlError('user-error', start, `No such config: ${name}`)
+      }
+      if (t.name === '$num') {
+        let [num, newIndex] = parseNum(source, i)
+        result[name] = num
+        i = newIndex-1
+        // parseNum(source, i)
+        // if (statement.args.length !== 1) {
+        //   throw new ZamlError('user-error', start, `Config key ${name} takes exactly 1 number value`)
+        // }
+        // return parseInt(statement.args[0], 10)
+      }
+      else if (t.name === '$str') {
+        let [str, newIndex] = parseStr(source, i)
+        result[name] = str
+        i = newIndex-1
+      }
+      else if (t.name === '$list') {
+        let nextCharIndex = skip(whitespace, source, i)
+
+        let [list, newIndex] = source[nextCharIndex] === '{'
+          ? parseList(source, nextCharIndex+1)
+          : parseInlineList(source, name, i)
+
+        result[name] = list
+        i = newIndex-1
+      }
+      else if (t.name === '$hash') {
+        let [hash, newIndex] = parseHash(source, i+1)
+        result[name] = hash
+        i = newIndex-1
+      }
+      else if (t.name === '$namespace') {
+        let [subResult, newIndex] = parseZaml(source, t.schema, BLOCK, i+1)
+        result[name] = subResult
+        i = newIndex-1
+      }
+      else {
+        throw new ZamlError('unexpected-error', start, "Shouldn't be possible.")
+      }
     }
     else if (state.mode === 'statement') {
 
@@ -139,7 +195,7 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
       // Parse block argument
       else if (c === '{') {
         let statementType = schema[state.name]
-        if ( statementType.name === '$block' ) {
+        if ( statementType.name === '$namespace' ) {
           let [subResult, newIndex] = parseZaml(source, statementType.schema, BLOCK, i+1)
           i = newIndex-1
           result[state.name] = subResult
@@ -164,7 +220,7 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
 
       // Whitelist errors
       else if (brackets.test(c)) {
-        throw { type: 'syntax-error', reason: `Unexpected ${c}`, i }
+        throw new ZamlError('syntax-error', i, `Unexpected ${c}`)
       }
 
       // Ignore whitespace
@@ -204,7 +260,7 @@ function parseZaml (source: string, schema: Schema, initialState: State, start: 
         continue
       }
       else {
-        throw { type: 'syntax-error', reason: `Expected newline but got ${c}`, i }
+        throw new ZamlError('syntax-error', i, `Expected newline but got ${c}`)
       }
     }
   }
@@ -236,12 +292,12 @@ function parseHash(source: string, start: number): [object, number] {
 
       // Reserve key operators
       if (reservedOps.test(c)) {
-        throw { type: 'syntax-error', reason: `Character ${c} is a reserved word`, h }
+        throw new ZamlError('syntax-error', h, `Character ${c} is a reserved word`)
       }
 
       // Whitelist errors
       if (brackets.test(c)) {
-        throw { type: 'syntax-error', reason: `Unexpected ${c}`, h }
+        throw new ZamlError('syntax-error', h, `Unexpected ${c}`)
       }
 
       // Begin key
@@ -301,6 +357,10 @@ function parseList(source: string, start: number): [string[], number] {
   return [list, source.length]
 }
 
+function parseInlineList(source: string, statementName: string, start: number): [string[],number] {
+  var args = parseArgs(source, statementName, start, false)
+}
+
 function executeSchema(schema: Schema, start: number, statement: Statement) {
   var t = schema[statement.name]
   if ( ! t ) {
@@ -323,11 +383,34 @@ function executeSchema(schema: Schema, start: number, statement: Statement) {
   }
 }
 
+function parseStr (source: string, start: number): [string,number] {
+  var end = start
+  console.log("str", end, `[${source[end]}]`)
+  // TODO: Support backslash quotes
+  if (source[start] === '(') {
+    return getUntilBracketEnd('()', source, start+1)
+  }
+  else {
+    return getWordUntil(newline, source, start+1)
+  }
+}
+
+function parseNum (source: string, start: number): [number,number] {
+  var end = start
+  console.log("num", end, `[${source[end]}]`)
+  // TODO: Support backslash quotes
+  let [numstr, newIndex] = getWordUntil(newline, source, start+1)
+  return [Number(numstr), newIndex]
+}
+
 function getQuotedString (source: string, start: number): [string,number] {
   var end = start
   console.log("quote", end, `[${source[end]}]`)
   // TODO: Support backslash quotes
   while (end < source.length && source[end] !== '"') {
+    if (newline.test(source[end])) {
+      throw new ZamlError('syntax-error', end, `Newlines are not allowed in quoted strings`)
+    }
     end += 1
   }
   if (end === source.length) {
@@ -336,9 +419,94 @@ function getQuotedString (source: string, start: number): [string,number] {
   return [source.substring(start, end), end+1]
 }
 
+function parseArgs (source: string, schema: Schema, statementName: string, start: number, allowBlock: boolean) {
+  var args: string[] = []
+  var block: null | string
+
+  for (let a=start; a < source.length; a++) {
+    let c = source[a]
+    console.log("a", a, `[${source[a] === '\n' ? '\\n' : source[a]}] hash`)
+
+    // Statement complete
+    if (
+      (c === '\r' && source[a+1] === '\n') ||
+      (c === '\n')
+    ) {
+      console.log("ALL ARGS COMPLETE")
+      return [args, null, a]
+    }
+
+    // Parse block argument
+    else if (c === '{') {
+      if (allowBlock === false) {
+        throw new ZamlError('user-error', a, `Config key '${statementName}' does not take a block`)
+      }
+
+    }
+
+    // Whitelist errors
+    else if (brackets.test(c)) {
+      throw new ZamlError('syntax-error', a, `Unexpected ${c}`)
+    }
+
+    // Ignore whitespace
+    else if (c === ' ') {
+      continue
+    }
+
+    // Quoted strings
+    else if (c === '"') {
+      let [str, newIndex] = getQuotedString(source, a+1)
+      a = newIndex-1
+      args.push(str)
+      console.log("ARG COMPLETE", str)
+    }
+
+    // Argument complete
+    else if (c !== ' ') {
+      // i = skip(/ /, source, i)
+      let [arg, newIndex] = getWordUntil(whitespaceOrBracket, source, a)
+      a = newIndex-1
+      args.push(arg)
+      console.log("ARG COMPLETE", arg)
+    }
+
+  }
+}
+
+//
+// Reads until a specific character
+//
+function getUntilBracketEnd (brackets: string, source: string, start: number): [string,number] {
+  var startBracket = brackets[0]
+  var endBracket = brackets[1]
+  var level = 0
+
+  var end = start
+  console.log("bracket", end, source.length, `[${source[end]}]`)
+  while (end < source.length) {
+    if (source[end] === endBracket) {
+      if (level === 0) {
+        break
+      }
+      else {
+        level -= 1
+      }
+    }
+    else if (source[end] === startBracket) {
+      level += 1
+    }
+    end += 1
+  }
+  if (end === source.length) {
+    throw new ZamlError('syntax-error', start-1, `Unexpected EOF: Missing end bracket \`${endBracket}\``)
+  }
+  return [source.substring(start, end), end]
+}
+
 function getWordUntil (r: RegExp, source: string, start: number): [string,number] {
   var end = start
-  console.log("yo_", end, source.length, `[${source[end]}]`, ! r.test(source[end]))
+  console.log("_word", end, `[${source[end]}]`)
   while (end < source.length && ! r.test(source[end])) {
     end += 1
   }
@@ -354,6 +522,18 @@ function skip (r: RegExp, source: string, start: number) {
   return end
 }
 
+function atEndOfLine (source: string, start: number) {
+  var end = start
+  while (end < source.length) {
+    if (source[end] === ' ') {
+      end += 1
+    }
+    else if (newline.test(source[end])) {
+      return true
+    }
+    else return false
+  }
+}
 
 
 // var source = `
@@ -399,4 +579,19 @@ class ZamlError extends Error {
   constructor(public type: ZamlErrorType, public i: number, message: string) {
     super(`[ZamlError] ${message}`)
   }
+  addSource(source: string) {
+    var lines = source.substring(0,this.i+1).split('\n')
+    var line = lines[lines.length-1]
+    var col = line.length
+    this.message =
+      this.message + '\n' +
+      `  on line ${lines.length} col ${col}\n` +
+      `    ${line}\n    ${ range(0,col-1).map(_ => ' ').join('') }^`
+  }
+}
+
+function range (start: number, end: number) {
+  var result = []
+  for (var i=start; i < end; i++) result.push(i)
+  return result
 }
