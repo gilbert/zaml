@@ -14,20 +14,22 @@ type Statement = {
 }
 
 type ValueType
-  = { name: '$num' }
+  = ({ name: '$num' }
   | { name: '$str' }
   | { name: '$hash' }
   | { name: '$list' }
   | { name: '$namespace', schema: Schema }
+  ) & { multi: boolean }
 
 type Schema = Record<string,ValueType>
 
 type ParseResult = any
 
-export async function parse (source: string, definitions: any) {
+export function parse (source: string, definitions: any) {
   try {
+    var schema = createSchema(definitions)
     var statements = lex(source, new Pos())
-    return parseZaml(source, createSchema(definitions), statements)
+    return parseZaml(source, schema, statements)
   }
   catch (e) {
     if (e instanceof ZamlError) {
@@ -121,19 +123,31 @@ function createSchema (definitions: any) {
     if (reservedOps.test(key[0])) {
       throw new ZamlError('author-error', null, `The key (${key}) is invalid: ${key[0]} is a reserved word.`)
     }
-    let t = definitions[key]
+
+    // Extract key attributes
+    let [configName, ...attrs] = key.split('$')
+    let multi = attrs.indexOf('multi') >= 0
+
+    // Strip attrs from key so source code matches up
+    if (attrs.length) {
+      definitions[configName] = definitions[key]
+      delete definitions[key]
+      key = configName
+    }
+
+    let t = definitions[configName]
     if (t === '$num' || t === '$str') {
-      schema[key] = { name: t }
+      schema[key] = { name: t, multi }
     }
     else if (t === '$hash') {
       // TODO: Support hash value types. Maybe
-      schema[key] = { name: t }
+      schema[key] = { name: t, multi }
     }
     else if (t === '$list') {
-      schema[key] = { name: t }
+      schema[key] = { name: t, multi }
     }
     else if (isObj(t)) {
-      schema[key] = { name: '$namespace', schema: createSchema(t) }
+      schema[key] = { name: '$namespace', schema: createSchema(t), multi }
     }
     else {
       throw new ZamlError('author-error', null, `Invalid schema type: ${t}`)
@@ -146,6 +160,12 @@ function createSchema (definitions: any) {
 function parseZaml (source: string, schema: Schema, statements: Statement[]): ParseResult {
   var result: any = {}
 
+  for (let name in schema) {
+    if (schema[name].multi) {
+      result[name] = []
+    }
+  }
+
   for (var i=0; i < statements.length; i++) {
     let s = statements[i]
     let name = s.name
@@ -155,11 +175,16 @@ function parseZaml (source: string, schema: Schema, statements: Statement[]): Pa
     if ( ! t ) {
       throw new ZamlError('user-error', s.pos, `No such config: ${name}`)
     }
+
+    let assign = t.multi
+      ? (val: any) => { result[name].push(val) }
+      : (val: any) => { result[name] = val }
+
     if (t.name === '$num') {
-      result[name] = Number(s.args)
+      assign(Number(s.args))
     }
     else if (t.name === '$str') {
-      result[name] = s.args
+      assign(s.args)
     }
     else if (t.name === '$list') {
       if (s.block) {
@@ -182,11 +207,11 @@ Examples:
           // TODO: Support lists of complex types
           list.push(s2.name + (s2.args.length ? ` ${s2.args}` : ''))
         }
-        result[name] = list
+        assign(list)
       }
       else {
         console.log(`PARSING ARGS [${s.argsPos[1].i}:${source[s.argsPos[1].i]}]`)
-        result[name] = parseArgs(source, s.argsPos[0], s.argsPos[1])
+        assign(parseArgs(source, s.argsPos[0], s.argsPos[1]))
       }
     }
     else if (t.name === '$hash') {
@@ -199,14 +224,14 @@ Examples:
           hash[s2.name] = s2.args
         }
       }
-      result[name] = hash
+      assign(hash)
     }
     else if (t.name === '$namespace') {
       if (! s.block) {
         console.log("???", s)
         throw new ZamlError('user-error', s.pos, `Namespace '${s.name}' requires a block.`)
       }
-      result[name] = parseZaml(source, t.schema, s.block)
+      assign(parseZaml(source, t.schema, s.block))
     }
     else {
       throw new ZamlError('unexpected-error', null, "Shouldn't be possible.")
@@ -299,7 +324,7 @@ class ZamlError extends Error {
     this.message =
       this.message + '\n' +
       `  on line ${line} col ${col}\n` +
-      `    ${lines[line-1]}\n    ${ range(0,col-2).map(_ => ' ').join('') }^`
+      `    ${lines[line-1]}\n    ${ range(0,col-1).map(_ => ' ').join('') }^`
   }
 }
 

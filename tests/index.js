@@ -1,8 +1,8 @@
 var o = require("ospec")
 var {parse} = require('../index.js')
 
-o("basic types", async function () {
-  var result = await parse(`
+o("basic types", function () {
+  var result = parse(`
     x 10
     y hello
     z one two
@@ -17,8 +17,8 @@ o("basic types", async function () {
   o(result.z).equals('one two')
 })
 
-o("hash", async function () {
-  var result = await parse(`
+o("hash", function () {
+  var result = parse(`
     one {
       two {
         k1 v1
@@ -38,8 +38,8 @@ o("hash", async function () {
   })
 })
 
-o("list", async function () {
-  var result = await parse(`
+o("list", function () {
+  var result = parse(`
     items {
       one
       two
@@ -58,10 +58,35 @@ o("list", async function () {
 })
 
 
+o("$multi", function () {
+  var result = parse(`
+    project {
+      title My Project 1
+    }
+    project {
+      title My Project 2
+      tag hello there
+      tag cool
+    }
+  `, {
+    project$multi: {
+      title: '$str',
+      tag$multi: '$str',
+    }
+  })
+
+  o(result).deepEquals({
+    project: [
+      { title: 'My Project 1', tag: [] },
+      { title: 'My Project 2', tag: ['hello there', 'cool'] },
+    ]
+  })
+})
+
 o.spec("Syntactic features", function () {
 
-  o("single-line string", async function () {
-    var result = await parse(`
+  o("single-line string", function () {
+    var result = parse(`
       items alice "big bob" robot
     `, {
       items: '$list',
