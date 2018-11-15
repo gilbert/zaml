@@ -16,7 +16,7 @@ type Statement = {
 type ValueType
   = ({ name: '$num' }
   | { name: '$str' }
-  | { name: '$hash' }
+  | { name: '$kv' }
   | { name: '$list' }
   | { name: '$namespace', schema: Schema }
   ) & { multi: boolean }
@@ -139,8 +139,7 @@ function createSchema (definitions: any) {
     if (t === '$num' || t === '$str') {
       schema[key] = { name: t, multi }
     }
-    else if (t === '$hash') {
-      // TODO: Support hash value types. Maybe
+    else if (t === '$kv') {
       schema[key] = { name: t, multi }
     }
     else if (t === '$list') {
@@ -214,7 +213,7 @@ Examples:
         assign(parseArgs(source, s.argsPos[0], s.argsPos[1]))
       }
     }
-    else if (t.name === '$hash') {
+    else if (t.name === '$kv') {
       var hash: Record<string,string> = {}
       if (s.block) {
         for (let s2 of s.block) {

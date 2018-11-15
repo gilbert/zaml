@@ -17,7 +17,7 @@ o("basic types", function () {
   o(result.z).equals('one two')
 })
 
-o("hash", function () {
+o("kv", function () {
   var result = parse(`
     one {
       two {
@@ -27,7 +27,7 @@ o("hash", function () {
     }
   `, {
     one: {
-      two: '$hash'
+      two: '$kv'
     },
   })
 
