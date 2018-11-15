@@ -45,7 +45,7 @@ function lex (source: string, pos: Pos, inBlock=false): Statement[] {
   while (pos.i < source.length) {
     let i = pos.i
     let c = source[i]
-    console.log("x", i, `[${source[i] === '\n' ? '\\n' : source[i]}]`, inBlock?'BLOCK':'')
+    console.log("x", pos.i, `[${source[pos.i] === '\n' ? '\\n' : source[pos.i]}]`, inBlock?'BLOCK':'')
 
     if (c === '}') {
       if (! inBlock) {
@@ -58,6 +58,14 @@ function lex (source: string, pos: Pos, inBlock=false): Statement[] {
 
     // Handle whitespace
     if (pos.skipWhitespace(source)) {
+      continue
+    }
+
+    // Comments
+    if (c === '#') {
+      while(pos.i < source.length && source[pos.i] !== '\n') {
+        pos.newcol()
+      }
       continue
     }
 

@@ -94,4 +94,20 @@ o.spec("Syntactic features", function () {
 
     o(result).deepEquals({ items: ['alice', 'big bob', 'robot'] })
   })
+
+  o("comments", function () {
+    var result = parse(`
+      items {
+        a
+        # b
+        c
+        #d
+        e
+      }
+    `, {
+      items: '$list'
+    })
+
+    o(result).deepEquals({ items: ['a','c','e'] })
+  })
 })
