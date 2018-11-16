@@ -268,7 +268,7 @@ function readWord (source: string, pos: Pos): string {
 function withVars (str: string, origin: Pos, opts: ParseOptions) {
   if (! opts.vars) return str
 
-  return str.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, varName) => {
+  return str.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (_match, varName) => {
     var val = opts.vars![varName]
     if ( ! val && opts.failOnUndefinedVars === true) {
       throw new ZamlError('user-error', origin, `Variable '$${varName}' is not defined.`)
