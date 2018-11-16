@@ -19,6 +19,11 @@ type Statement = {
 
 type ParseResult = any
 
+export type ParseOptions = {
+  vars?: Record<string,string>,
+  failOnUndefinedVars?: boolean,
+}
+
 export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
   var results: Statement[] = []
 
@@ -51,12 +56,18 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
 
     // Reserve key operators
     if (reservedOps.test(c)) {
-      throw new ZamlError('syntax-error', pos, `Character ${c} is reserved for config names`)
+      throw new ZamlError('syntax-error', pos, `Character ${c} is reserved for key names`)
     }
 
     // Whitelist errors
     if (brackets.test(c)) {
       throw new ZamlError('syntax-error', pos, `Unexpected ${c}`)
+    }
+
+    // Special character escapes
+    if (c === '\\' && source[pos.i+1] === '$') {
+      // Skip ahead one char, effectively removing the backslash from the key name.
+      pos.newcol()
     }
 
     //
@@ -105,7 +116,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
   return results
 }
 
-export function parseZaml (source: string, schema: Schema, statements: Statement[]): ParseResult {
+export function parseZaml (source: string, schema: Schema, statements: Statement[], opts: ParseOptions): ParseResult {
   var result: any = {}
 
   for (let name in schema) {
@@ -121,7 +132,7 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
     let t = schema[name]
     console.log("STATEMENT", name)
     if ( ! t ) {
-      throw new ZamlError('user-error', s.pos, `No such config: ${name}`)
+      throw new ZamlError('user-error', s.pos, `No such config key: ${name}`)
     }
 
     let assign = t.multi
@@ -129,16 +140,16 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
       : (val: any) => { result[name] = val }
 
     if (t.name === 'num') {
-      assign(Number(s.args))
+      assign(Number(withVars(s.args, s.pos, opts)))
     }
     else if (t.name === 'str') {
-      assign(s.args)
+      assign(withVars(s.args, s.pos, opts))
     }
     else if (t.name === 'list') {
       if (s.block) {
         if (s.args.length !== 1) {
           throw new ZamlError('user-error', s.argsPos[0],
-  `You may provide a block or inline arguments, but not both.
+  `You may provide a block or inline arguments to a list, but not both.
 Examples:
   ✓ a_list x y z
   ✓ a_list {
@@ -153,13 +164,16 @@ Examples:
         let list = []
         for (let s2 of s.block) {
           // TODO: Support lists of complex types
-          list.push(s2.name + (s2.args.length ? ` ${s2.args}` : ''))
+          list.push(
+            withVars(s2.name + (s2.args.length ? ` ${s2.args}` : ''), s.pos, opts)
+          )
         }
         assign(list)
       }
       else {
+        // Inline list
         console.log(`PARSING ARGS [${s.argsPos[1].i}:${source[s.argsPos[1].i]}]`)
-        assign(parseArgs(source, s.argsPos[0], s.argsPos[1]))
+        assign(parseArgs(source, s.argsPos[0], s.argsPos[1], opts))
       }
     }
     else if (t.name === 'kv') {
@@ -169,7 +183,7 @@ Examples:
           if (s2.args === '') {
             throw new ZamlError('user-error', s2.argsPos[0], `Hash key '${s2.name}' requires a value.`)
           }
-          hash[s2.name] = s2.args
+          hash[ withVars(s2.name, s2.pos, opts)] = withVars(s2.args, s2.argsPos[0], opts)
         }
       }
       assign(hash)
@@ -179,7 +193,7 @@ Examples:
         console.log("???", s)
         throw new ZamlError('user-error', s.pos, `Namespace '${s.name}' requires a block.`)
       }
-      assign(parseZaml(source, t.schema, s.block))
+      assign(parseZaml(source, t.schema, s.block, opts))
     }
     else {
       throw new ZamlError('unexpected-error', null, `Shouldn't be possible (${JSON.stringify(t)})`)
@@ -209,7 +223,7 @@ function parseQuotedString (source: string, pos: Pos, end: Pos): string {
   return str
 }
 
-function parseArgs (source: string, start: Pos, end: Pos): string[] {
+function parseArgs (source: string, start: Pos, end: Pos, opts: ParseOptions): string[] {
   var args: string[] = []
   var pos = start.copy()
 
@@ -221,19 +235,20 @@ function parseArgs (source: string, start: Pos, end: Pos): string[] {
 
     // Quoted strings
     if (c === '"') {
+      let start = pos.copy()
       let arg = parseQuotedString(source, pos.newcol(), end)
-      args.push(arg)
+      args.push(withVars(arg, start, opts))
       console.log("ARG COMPLETE", arg)
     }
 
     // Argument complete
     else {
-      let start = pos.i
+      let start = pos.copy()
       while (pos.i < end.i && source[pos.i] !== ' ' && source[pos.i] !== '\t') {
         pos.newcol()
       }
-      let arg = source.substring(start, pos.i)
-      args.push(arg)
+      let arg = source.substring(start.i, pos.i)
+      args.push(withVars(arg, start, opts))
       console.log("ARG COMPLETE", arg)
     }
   }
@@ -248,4 +263,16 @@ function readWord (source: string, pos: Pos): string {
     pos.newcol()
   }
   return source.substring(start, pos.i)
+}
+
+function withVars (str: string, origin: Pos, opts: ParseOptions) {
+  if (! opts.vars) return str
+
+  return str.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, varName) => {
+    var val = opts.vars![varName]
+    if ( ! val && opts.failOnUndefinedVars === true) {
+      throw new ZamlError('user-error', origin, `Variable '$${varName}' is not defined.`)
+    }
+    return val || ''
+  })
 }

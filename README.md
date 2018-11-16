@@ -17,11 +17,11 @@ Zaml isn't even an ancronym. That's how good it is.
 Zaml's syntax is inspired by [NGINX's conf format](https://nginx.org/en/docs/beginners_guide.html#conf_structure). Clean, effective, and not obsessed with your shift key:
 
 ```js
-var parse = require('zaml')
+import {parse} = from 'zaml'
 
 var schema = 'fileRoots{dev:list,prod:list}'
 
-var result = parse(schema, { env: true }, `
+var zamlContent = `
 
   # This is Zaml!
   # You'd probably load this from a file instead.
@@ -36,7 +36,9 @@ var result = parse(schema, { env: true }, `
       $HOME/prod/states
     }
   }
-`)
+`
+
+var result = parse(zamlContent, { vars: process.env }, schema)
 ```
 
 Parsing the above will result in this data structure:

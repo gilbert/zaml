@@ -57,7 +57,6 @@ o("list", function () {
   })
 })
 
-
 o("multi", function () {
   var result = parse(`
     project {
@@ -80,6 +79,53 @@ o("multi", function () {
       { title: 'My Project 1', tag: [] },
       { title: 'My Project 2', tag: ['hello there', 'cool'] },
     ]
+  })
+})
+
+o.spec("ParseOptions", function () {
+  o("vars", function () {
+    var result = parse(`
+      num $X
+      str $A$A$B
+      lst $C $C
+      hsh {
+        \\$D $E
+      }
+    `, {
+      num: 'num', str: 'str', lst: 'list', hsh: 'kv'
+    }, {
+      vars: { X: '20', A: 'a', B: 'b', C: 'c', D: 'd', E: 'e' }
+    })
+
+    o(result).deepEquals({
+      num: 20,
+      str: 'aab',
+      lst: ['c', 'c'],
+      hsh: { d: 'e' },
+    })
+  })
+
+  o("failOnUndefinedVars", function () {
+    try {
+      var result = parse(`
+        x $A $B
+      `, {
+        x: 'str'
+      }, {
+        vars: { A: 'a' },
+        failOnUndefinedVars: true,
+      })
+
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      o(/'\$B'/i.test(err.message)).equals(true)
+      o(/not defined/i.test(err.message)).equals(true)
+
+      o(err.type).equals('user-error')
+      o(err.pos.line).equals(2)
+      o(err.pos.col).equals(9)
+    }
   })
 })
 
