@@ -107,7 +107,7 @@ function readType (source: string, pos: Pos) {
 
     let c = source[pos.i]
 
-    if (c === ',') {
+    if (c === ',' || c === '}') {
       pos.newcol()
       return 'str'
     }

@@ -25,7 +25,11 @@ o("list namespace", function () {
   })
 })
 
-o("key attrs", function () {})
+o("key attrs", function () {
+  o(p('user|multi{name}')).deepEquals({
+    'user|multi': { name: 'str' }
+  })
+})
 
 o.spec("Type checking", function () {
 
