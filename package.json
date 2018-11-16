@@ -1,14 +1,14 @@
 {
   "name": "zaml",
   "version": "0.0.1",
-  "description": "",
+  "description": "Fast, type-checked, zero-dependency configuration.",
   "main": "index.js",
   "scripts": {
     "start": "tsc --watch",
     "test": "node index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["config", "parser", "format", "schema", "validation"],
+  "author": "https://github.com/gilbert",
   "license": "ISC",
   "devDependencies": {
     "ospec": "^3.0.1",
