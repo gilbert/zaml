@@ -1,3 +1,5 @@
 node_modules/
-./*.js
+index.js
 lib/*.js
+parser/*.js
+schema/*.js

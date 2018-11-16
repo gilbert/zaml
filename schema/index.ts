@@ -1,4 +1,4 @@
-import {reservedOps, isObj, ZamlError, Schema} from './lib/util'
+import {reservedOps, isObj, ZamlError, Schema, Pos} from '../lib/util'
 
 export function createSchema (definitions: any) {
   definitions = {...definitions}

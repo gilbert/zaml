@@ -6,7 +6,7 @@ import {
   whitespace,
   reservedOps,
   trailingSpaces
-} from './lib/util'
+} from '../lib/util'
 
 type Statement = {
   pos: Pos
