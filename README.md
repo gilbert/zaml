@@ -12,7 +12,7 @@ Zaml isn't even an ancronym. That's how good it is.
 
 ## Introduction
 
-**NOTE: ZAML IS STILL IN ITS TRANSFORMATION SEQUENCE.** THESE DOCS ARE NOT FULLY FUNCTIONAL. Check the [tests](./tests/index.js) for current progress.
+**NOTE: ZAML IS STILL IN ITS TRANSFORMATION SEQUENCE.** THESE DOCS ARE NOT FULLY FUNCTIONAL. Check the [tests](./tests) for current progress.
 
 Zaml's syntax is inspired by [NGINX's conf format](https://nginx.org/en/docs/beginners_guide.html#conf_structure). Clean, effective, and not obsessed with your shift key:
 
