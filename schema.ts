@@ -1,7 +1,10 @@
 import {reservedOps, isObj, ZamlError, Schema} from './lib/util'
 
 export function createSchema (definitions: any) {
+  definitions = {...definitions}
+
   var schema: Schema = {}
+
   for (var key in definitions) {
     if (reservedOps.test(key[0])) {
       throw new ZamlError('author-error', null, `The key (${key}) is invalid: ${key[0]} is a reserved word.`)
