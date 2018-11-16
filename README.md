@@ -38,7 +38,7 @@ var zamlContent = `
   }
 `
 
-var result = parse(zamlContent, { vars: process.env }, schema)
+var result = parse(zamlContent, schema, { vars: process.env })
 ```
 
 Parsing the above will result in this data structure:
