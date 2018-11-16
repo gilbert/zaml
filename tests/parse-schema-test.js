@@ -32,7 +32,7 @@ o.spec("Type checking", function () {
   o("Throws on unrecognized types", function () {
     try {
       p('users:nope')
-      o("Shouldn't be successful").equals(false)
+      o("Should not be successful").equals(false)
     }
     catch (err) {
       o(/No such type/i.test(err.message)).equals(true)

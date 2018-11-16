@@ -39,6 +39,9 @@ export function createSchema (definitions: any) {
     else if (t === 'list') {
       schema[key] = { name: t, multi }
     }
+    else if (t === 'bool') {
+      schema[key] = { name: t, multi }
+    }
     else if (isObj(t)) {
       schema[key] = { name: 'namespace', schema: createSchema(t), multi }
     }

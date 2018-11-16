@@ -145,6 +145,16 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
     else if (t.name === 'str') {
       assign(withVars(s.args, s.pos, opts))
     }
+    else if (t.name === 'bool') {
+      let val = withVars(s.args, s.pos, opts)
+      if (val !== 'true' && val !== 'false') {
+        throw new ZamlError('user-error', s.argsPos[0],
+`Invalid boolean: '${val}'
+  Value must be true or false.`
+        )
+      }
+      assign(val === 'true')
+    }
     else if (t.name === 'list') {
       if (s.block) {
         if (s.args.length !== 1) {

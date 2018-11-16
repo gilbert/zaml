@@ -6,15 +6,18 @@ o("basic types", function () {
     x 10
     y hello
     z one two
+    b true
   `, {
     x: 'num',
     y: 'str',
     z: 'str',
+    b: 'bool',
   })
 
   o(result.x).equals(10)
   o(result.y).equals('hello')
   o(result.z).equals('one two')
+  o(result.b).equals(true)
 })
 
 o("kv", function () {
