@@ -34,7 +34,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
 
     if (c === '}') {
       if (! inBlock) {
-        throw new ZamlError('syntax-error', pos, `Unexpected {`)
+        throw new ZamlError('syntax-error', pos, `Unexpected }`)
       }
       console.log("BLOCK COMPLETE")
       pos.push(source)

@@ -14,10 +14,13 @@ type ValueType
   | { name: 'str' }
   | { name: 'kv' }
   | { name: 'list' }
+  | { name: 'bool' }
   | { name: 'namespace', schema: Schema }
   ) & { multi: boolean }
 
 export type Schema = Record<string,ValueType>
+
+export const validTypes = ['num', 'str', 'kv', 'list', 'bool']
 
 //
 // Errors
@@ -92,6 +95,7 @@ export class Pos {
     return false
   }
   skipWhitespace(source: string): boolean {
+    if (this.i >= source.length) return false
     return this.skipSpace(source) || this.skipNewline(source)
   }
 }

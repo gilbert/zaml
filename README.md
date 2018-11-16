@@ -100,7 +100,7 @@ title ~/home/my-proj
 
 ### list
 
-A `list` is a list of strings. List items can either be inline or within a block.
+A `list` is *always* list of strings. List items can either be inline or within a block.
 
 ```
 # schema = tags:list
@@ -115,6 +115,19 @@ tags {
 }
 
 #=> { "tags": ["library", "npm", "js"] }
+```
+
+Although a list is always a list of strings, you can attach an optional sub-[namespace](#namespace) to the list item schema:
+
+```
+# schema = users:list{admin:bool}
+users {
+  andy
+  beth {
+    admin true
+  }
+  carl
+}
 ```
 
 ### kv
@@ -147,7 +160,7 @@ project {
 
 ### key|multi
 
-Appending `|multi` to a key allows your users to specify it more than once. It will also make your key always present, even if the user did not specify it.
+Appending the `|multi` attribute to a key allows your users to specify it more than once.
 
 ```
 # schema = project|multi{title,type}
@@ -161,6 +174,8 @@ project {
 
 #=> { "project": [{ "title": "A" }, { "title": "B", "type": "personal" }] }
 ```
+
+It will also make your key always present, even if the user did not specify it.
 
 ```
 # schema = project|multi{title,type}
