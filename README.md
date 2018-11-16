@@ -68,7 +68,7 @@ Here are Zaml's features and examples, from simplest to most complex.
 
 ### Comments
 
-A comment is any line that begins with `#`
+A comment is any line that **begins** with `#`
 
 ```
 # I am a comment
@@ -98,38 +98,6 @@ title ~/home/my-proj
 #=> { title: "~/home/my-proj" }
 ```
 
-### list
-
-A `list` is *always* list of strings. List items can either be inline or within a block.
-
-```
-# schema = tags:list
-# Inline example
-tags library npm js
-
-# Block example
-tags {
-  library
-  npm
-  js
-}
-
-#=> { "tags": ["library", "npm", "js"] }
-```
-
-Although a list is always a list of strings, you can attach an optional sub-[namespace](#namespace) to the list item schema:
-
-```
-# schema = users:list{admin:bool}
-users {
-  andy
-  beth {
-    admin true
-  }
-  carl
-}
-```
-
 ### kv
 
 A `kv` is a set of key-value pairs. It requires a block.
@@ -144,9 +112,58 @@ redirects {
 #=> { "redirects": { "/contact": "/contact-us", "/profile/:user": "/" } }
 ```
 
+Please note Zaml **is not** indentation sensitive.
+
+### list
+
+A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
+
+```
+# schema = tags:list
+
+# Inline example
+tags library npm js
+
+# Block example
+tags {
+  library
+  npm
+  js
+}
+
+#=> { "tags": ["library", "npm", "js"] }
+```
+
+You can also enhance your list by making a [namespace](#namespace) available to each `str`.
+
+```
+# schema = users:list{admin:bool}
+users {
+  andy
+  beth {
+    admin true
+  }
+  carl
+}
+
+#=> { "users": [["andy"], ["beth", {admin: true}], ["carl"]] }
+```
+
+Note how a namespace changes the shape of the above parsed result. This allows you to use destructuring for each result:
+
+```js
+var result = parse(source, schema)
+for (let [user, options] of result.users) {
+  //
+  // `options` will be {admin: true} for beth,
+  //  and undefined for andy & carl
+  //
+}
+```
+
 ### namespace
 
-A namespace is a specified inner schema. It translates to a restricted hash.
+A namespace is a specified inner schema. It translates to a hash that only allows your specified keys.
 
 ```
 # schema = project{title,tags:list}
@@ -175,7 +192,7 @@ project {
 #=> { "project": [{ "title": "A" }, { "title": "B", "type": "personal" }] }
 ```
 
-It will also make your key always present, even if the user did not specify it.
+It will also guarantee your key is always present, even if the user does not provide any.
 
 ```
 # schema = project|multi{title,type}

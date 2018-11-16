@@ -60,6 +60,24 @@ o("list", function () {
   })
 })
 
+o.only("list namespace", function () {
+  var result = parse(`
+    users {
+      andy
+      beth {
+        admin true
+      }
+      carl
+    }
+  `, {
+    users: ['list', { admin: 'bool' }],
+  })
+
+  o(result).deepEquals({
+    users: [['andy'], ['beth', {admin: true}], ['carl']]
+  })
+})
+
 o("multi", function () {
   var result = parse(`
     project {
