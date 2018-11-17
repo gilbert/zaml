@@ -173,10 +173,18 @@ Examples:
 
         let list = []
         for (let s2 of s.block) {
-          // TODO: Support lists of complex types
-          list.push(
-            withVars(s2.name + (s2.args.length ? ` ${s2.args}` : ''), s.pos, opts)
-          )
+          if (t.schema) {
+            let str = withVars(s2.name, s2.pos, opts)
+            list.push(s2.block ? [str, parseZaml(source, t.schema, s2.block, opts)] : [str])
+          }
+          else if (s2.block) {
+            throw new ZamlError('user-error', s2.argsPos[0], `The '${s.name}' list does not accept a block.`)
+          }
+          else {
+            list.push(
+              withVars(s2.name + (s2.args.length ? ` ${s2.args}` : ''), s2.pos, opts)
+            )
+          }
         }
         assign(list)
       }

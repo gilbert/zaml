@@ -60,7 +60,7 @@ o("list", function () {
   })
 })
 
-o.only("list namespace", function () {
+o("list namespace", function () {
   var result = parse(`
     users {
       andy

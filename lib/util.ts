@@ -13,7 +13,7 @@ type ValueType
   = ({ name: 'num' }
   | { name: 'str' }
   | { name: 'kv' }
-  | { name: 'list' }
+  | { name: 'list', schema?: Schema }
   | { name: 'bool' }
   | { name: 'namespace', schema: Schema }
   ) & { multi: boolean }

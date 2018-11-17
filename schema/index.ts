@@ -39,6 +39,9 @@ export function createSchema (definitions: any) {
     else if (t === 'list') {
       schema[key] = { name: t, multi }
     }
+    else if (Array.isArray(t) && t[0] === 'list' && isObj(t[1])) {
+      schema[key] = { name: t[0], schema: createSchema(t[1]), multi }
+    }
     else if (t === 'bool') {
       schema[key] = { name: t, multi }
     }
@@ -46,7 +49,7 @@ export function createSchema (definitions: any) {
       schema[key] = { name: 'namespace', schema: createSchema(t), multi }
     }
     else {
-      throw new ZamlError('author-error', null, `Invalid schema type: ${t}`)
+      throw new ZamlError('author-error', null, `Invalid schema type: ${JSON.stringify(t)}`)
     }
   }
   return schema
