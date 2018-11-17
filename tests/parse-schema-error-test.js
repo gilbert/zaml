@@ -9,7 +9,71 @@ o.spec("Schema Parse Errors", function () {
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'syntax-error', 1, 8, /unexpected/i, /forget/i, /colon/i)
+      checkError(err, 'syntax-error', 1, 8, /unexpected '{'/i, /forget/i, /colon/i)
+    }
+  })
+
+  o("tuple parens without a colon", function () {
+    try {
+      p(`project(str,str)`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 8, /unexpected '\('/i, /forget/i, /colon/i)
+    }
+  })
+
+  o("invalid tuple types", function () {
+    try {
+      p(`project:(str,kv)`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 14, /invalid tuple type/i, /'kv'/i)
+    }
+    try {
+      p(`project:(str,list)`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 14, /invalid tuple type/i, /'list'/i)
+    }
+  })
+
+  o("empty and single-member tuples", function () {
+    try {
+      p(`project:()`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 9, /requires at least two/i)
+    }
+    try {
+      p(`project:(str)`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 9, /requires at least two/i)
+    }
+  })
+
+  o("tuple type namespace", function () {
+    try {
+      p(`project:(str{})`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 13, /unexpected/i, /namespace/i, /not allowed/i)
+    }
+  })
+
+  o("missing tuple paren", function () {
+    try {
+      p(`project:(num,bool`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 9, /missing/i, /'\)'/i,)
     }
   })
 })

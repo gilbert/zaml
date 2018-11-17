@@ -31,6 +31,18 @@ o("key attrs", function () {
   })
 })
 
+o("tuple", function () {
+  o(p('redirect:(num,str,str)')).deepEquals({
+    'redirect': ['num','str','str']
+  })
+})
+
+o("tuple namespace", function () {
+  o(p('redirect:(num,str,str){enabled}')).deepEquals({
+    'redirect': ['num','str','str', { enabled: 'str' }]
+  })
+})
+
 o.spec("Type checking", function () {
 
   o("Throws on unrecognized types", function () {

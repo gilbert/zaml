@@ -10,5 +10,4 @@ exports.checkError = function checkError (err, type, line, col, ...fragments) {
   }
   o(err.pos.line).equals(line)
   o(err.pos.col).equals(col)
-
 }

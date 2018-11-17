@@ -21,6 +21,7 @@ type ValueType
 export type Schema = Record<string,ValueType>
 
 export const validTypes = ['num', 'str', 'kv', 'list', 'bool']
+export const basicTypes = ['num', 'str', 'bool']
 
 //
 // Errors
@@ -32,6 +33,9 @@ type ZamlErrorType
   | 'unexpected-error'
 
 export class ZamlError extends Error {
+  static syntax(pos: Pos, char: string, more='') {
+    return new ZamlError('syntax-error', pos, `Unexpected '${char}'${more}`)
+  }
   constructor(public type: ZamlErrorType, public pos: Pos | null, message: string) {
     super(`[ZamlError] ${message}`)
   }

@@ -4,6 +4,7 @@ import {
   ZamlError,
   isObj,
   validTypes,
+  basicTypes,
   whitespace,
   reservedOps,
 } from '../lib/util'
@@ -74,7 +75,7 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
 
     if (source[pos.i] === '}') {
       if (! inBlock) {
-        throw new ZamlError('syntax-error', pos, `Unexpected }`)
+        throw ZamlError.syntax(pos, '}')
       }
       console.log("DEF BLOCK COMPLETE")
       pos.newcol()
@@ -95,6 +96,8 @@ function readName (source: string, pos: Pos): string {
     pos.i < source.length &&
     source[pos.i] !== '{' &&
     source[pos.i] !== '}' &&
+    source[pos.i] !== '(' &&
+    source[pos.i] !== ')' &&
     source[pos.i] !== ',' &&
     source[pos.i] !== ':' &&
     ! whitespace.test(source[pos.i])
@@ -111,8 +114,8 @@ function readType (source: string, pos: Pos) {
     let c = source[pos.i]
     let d = source[pos.i+1]
 
-    if (c === '{') {
-      throw new ZamlError('syntax-error', pos, `Unexpected '${source[pos.i]}'. Did you forget a colon?`)
+    if (c === '{' || c === '(') {
+      throw ZamlError.syntax(pos, source[pos.i], '. Did you forget a colon?')
     }
 
     if (c === ',' || c === '}') {
@@ -122,6 +125,22 @@ function readType (source: string, pos: Pos) {
 
     if (c === ':' && d === '{') {
       return parseDefs(source, pos.newcol().newcol(), true)
+    }
+
+    if (c === ':' && d === '(') {
+      var tuplePos = pos.newcol().copy()
+      var types = readTupleTypes(source, pos)
+
+      if (types.length < 2) {
+        throw new ZamlError('user-error', tuplePos,
+          `A tuple requires at least two types (${types.length ? 'onle one was' : 'none were'} provided).`)
+      }
+
+      if (source[pos.i] === '{') {
+        let namespace = parseDefs(source, pos.newcol(), true)
+        types.push(namespace)
+      }
+      return types
     }
 
     if (c === ':') {
@@ -149,8 +168,51 @@ function readType (source: string, pos: Pos) {
       }
     }
 
-    throw new ZamlError('syntax-error', pos, `Unexpected '${source[pos.i]}'`)
+    throw ZamlError.syntax(pos, source[pos.i])
   }
 
   return 'str'
+}
+
+function readTupleTypes (source: string, pos: Pos): string[] {
+  var start = pos.copy()
+  var types: string[] = []
+
+  pos.newcol() // Skip opening parens
+
+  while (pos.i < source.length) {
+    while (pos.skipWhitespace(source)) {}
+
+    let c = source[pos.i]
+    console.log("yo", pos.i, c)
+
+    if (c === ',') {
+      pos.newcol()
+      continue
+    }
+
+    if (c === ')') {
+      pos.newcol()
+      return types
+    }
+
+    if (c === ':' || c === '(') {
+      throw ZamlError.syntax(pos, c)
+    }
+
+    if (c === '{') {
+      throw ZamlError.syntax(pos, c, ' (namespaces are not allowed in a tuple)')
+    }
+
+    let namePos = pos.copy()
+    let name = readName(source, pos)
+
+    if (basicTypes.indexOf(name) === -1) {
+      throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, and bool.`)
+    }
+    console.log("TYPE COMPLETE", name)
+    types.push(name)
+  }
+
+  throw new ZamlError('syntax-error', start, `Missing end parenthesis ')'`)
 }
