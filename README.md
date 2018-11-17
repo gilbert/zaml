@@ -87,9 +87,20 @@ autoCleanup true
 #=> { "autoCleanup": bool }
 ```
 
+### num
+
+A `num` accepts a single numerical value.
+
+```
+# schema = port:num
+port 3000
+
+#=> { port: 3000 }
+```
+
 ### str
 
-A `str` is the default type of any unspecified schema.
+A `str` is the default type of any unspecified schema key.
 
 ```
 # schema = title OR title:str
@@ -139,11 +150,11 @@ You can also enhance your list by making a [namespace](#namespace) available to 
 ```
 # schema = users:list{admin:bool}
 users {
-  andy
-  beth {
+  andy@xx.com
+  beth@yy.com {
     admin true
   }
-  carl
+  carl@zz.com
 }
 
 #=> { "users": [["andy"], ["beth", {admin: true}], ["carl"]] }
@@ -201,6 +212,10 @@ It will also guarantee your key is always present, even if the user does not pro
 
 #=> { "project": [] }
 ```
+
+## Roadmap
+
+- Discuss solution for multiline strings
 
 ## Developing
 
