@@ -3,6 +3,17 @@ var {checkError} = require('./helpers')
 var {parseSchema: p} = require('../schema')
 
 o.spec("Schema Parse Errors", function () {
+
+  o("unrecognized types", function () {
+    try {
+      p('users:idontexist')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 7, /no such type/i, /idontexist/)
+    }
+  })
+
   o("namespace brackets without a colon", function () {
     try {
       p(`project{name}`)
