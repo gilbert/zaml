@@ -14,7 +14,7 @@ o("basic", function () {
 })
 
 o("namespace", function () {
-  o(p('user{name,score:num}')).deepEquals({
+  o(p('user:{name,score:num}')).deepEquals({
     user: { name: 'str', score: 'num' }
   })
 })
@@ -26,7 +26,7 @@ o("list namespace", function () {
 })
 
 o("key attrs", function () {
-  o(p('user|multi{name}')).deepEquals({
+  o(p('user|multi:{name}')).deepEquals({
     'user|multi': { name: 'str' }
   })
 })

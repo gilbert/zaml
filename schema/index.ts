@@ -109,14 +109,19 @@ function readType (source: string, pos: Pos) {
     while (pos.skipWhitespace(source)) {}
 
     let c = source[pos.i]
+    let d = source[pos.i+1]
+
+    if (c === '{') {
+      throw new ZamlError('syntax-error', pos, `Unexpected '${source[pos.i]}'. Did you forget a colon?`)
+    }
 
     if (c === ',' || c === '}') {
       pos.newcol()
       return 'str'
     }
 
-    if (c === '{') {
-      return parseDefs(source, pos.newcol(), true)
+    if (c === ':' && d === '{') {
+      return parseDefs(source, pos.newcol().newcol(), true)
     }
 
     if (c === ':') {
@@ -142,10 +147,9 @@ function readType (source: string, pos: Pos) {
         pos.newcol()
         return typename
       }
-      else {
-        throw new ZamlError('syntax-error', pos, `Unexpected '${source[pos.i]}'`)
-      }
     }
+
+    throw new ZamlError('syntax-error', pos, `Unexpected '${source[pos.i]}'`)
   }
 
   return 'str'

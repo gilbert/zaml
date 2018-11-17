@@ -19,7 +19,7 @@ Zaml's syntax is inspired by [NGINX's conf format](https://nginx.org/en/docs/beg
 ```js
 import {parse} = from 'zaml'
 
-var schema = 'fileRoots{dev:list,prod:list}'
+var schema = 'fileRoots:{dev:list,prod:list}'
 
 var zamlContent = `
 
@@ -95,7 +95,7 @@ A `num` accepts a single numerical value.
 # schema = port:num
 port 3000
 
-#=> { port: 3000 }
+#=> { "port": 3000 }
 ```
 
 ### str
@@ -106,7 +106,7 @@ A `str` is the default type of any unspecified schema key.
 # schema = title OR title:str
 title ~/home/my-proj
 
-#=> { title: "~/home/my-proj" }
+#=> { "title": "~/home/my-proj" }
 ```
 
 ### kv
@@ -177,7 +177,7 @@ for (let [user, options] of result.users) {
 A namespace is a specified inner schema. It translates to a hash that only allows your specified keys.
 
 ```
-# schema = project{title,tags:list}
+# schema = project:{title,tags:list}
 project {
   title My Sweet App
   tags js npm zaml
@@ -191,7 +191,7 @@ project {
 Appending the `|multi` attribute to a key allows your users to specify it more than once.
 
 ```
-# schema = project|multi{title,type}
+# schema = project|multi:{title,type}
 project {
   title A
 }
@@ -206,7 +206,7 @@ project {
 It will also guarantee your key is always present, even if the user does not provide any.
 
 ```
-# schema = project|multi{title,type}
+# schema = project|multi:{title,type}
 
 # (intentionally left blank)
 

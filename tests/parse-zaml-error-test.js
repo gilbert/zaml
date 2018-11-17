@@ -1,4 +1,5 @@
 var o = require("ospec")
+var {checkError} = require('./helpers')
 var {parse} = require('../index.js')
 
 o.spec("Errors", function () {
@@ -35,15 +36,3 @@ o.spec("Errors", function () {
     }
   })
 })
-
-function checkError (err, type, line, col, ...fragments) {
-  if (err.type !== type) {
-    throw err
-  }
-  o(err.pos.line).equals(line)
-  o(err.pos.col).equals(col)
-
-  for (var r of fragments) {
-    o(r.test(err.message)).equals(true)
-  }
-}
