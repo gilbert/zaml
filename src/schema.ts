@@ -210,6 +210,9 @@ function readType (source: string, pos: Pos) {
 
     throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
   }
+  else {
+    throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
+  }
 
   return 'str'
 }

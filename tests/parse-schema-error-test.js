@@ -14,6 +14,16 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
+  o("whitespace", function () {
+    try {
+      p('one two')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 5, /unexpected "t"/i)
+    }
+  })
+
   o("block brackets without a colon", function () {
     try {
       p(`project{name}`)
