@@ -20,7 +20,7 @@ o.spec("Schema Parse Errors", function () {
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'syntax-error', 1, 8, /unexpected '{'/i, /forget/i, /colon/i)
+      checkError(err, 'syntax-error', 1, 8, /unexpected "{"/i, /forget/i, /colon/i)
     }
   })
 
@@ -30,7 +30,7 @@ o.spec("Schema Parse Errors", function () {
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'syntax-error', 1, 8, /unexpected '\('/i, /forget/i, /colon/i)
+      checkError(err, 'syntax-error', 1, 8, /unexpected "\("/i, /forget/i, /colon/i)
     }
   })
 
@@ -84,7 +84,7 @@ o.spec("Schema Parse Errors", function () {
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'syntax-error', 1, 9, /missing/i, /'\)'/i,)
+      checkError(err, 'syntax-error', 1, 9, /missing/i, /"\)"/i,)
     }
   })
 })

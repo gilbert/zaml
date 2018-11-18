@@ -1,3 +1,8 @@
+//
+// Zaml schemas are deliberately non whitespace sensitive.
+// The strategy to accomplish this is for each token to
+// take care of their own trailing spaces.
+//
 import {
   Pos,
   Schema,
@@ -86,25 +91,30 @@ export function parseSchema (source: string) {
 function parseDefs (source: string, pos: Pos, inBlock=false) {
   var result: any = {}
 
-  while (pos.i < source.length) {
+  while (pos.skipWhitespace(source)) {}
 
+  while (pos.i < source.length) {
     if (source[pos.i] === '}') {
       if (! inBlock) {
-        throw ZamlError.syntax(pos, '}')
+        throw new ZamlError('syntax-error', pos, unexp('}'))
       }
       pos.newcol()
       return result
     }
 
     var name = readName(source, pos)
-    var type = readType(source, pos)
+
+    while (pos.skipWhitespace(source)) {}
+
+    var type = readType(source, pos, name)
     result[name] = type
+
+    while (pos.skipWhitespace(source)) {}
   }
   return result
 }
 
 function readName (source: string, pos: Pos): string {
-  while (pos.skipWhitespace(source)) {}
   var start = pos.i
   while (
     pos.i < source.length &&
@@ -121,86 +131,98 @@ function readName (source: string, pos: Pos): string {
   return source.substring(start, pos.i)
 }
 
-function readType (source: string, pos: Pos) {
-  while (pos.i < source.length) {
+function readType (source: string, pos: Pos, key: string) {
+  if (pos.i >= source.length) {
+    // At this point we've reached the end without
+    // a specified type. Return the default.
+    return 'str'
+  }
+
+  let c = source[pos.i]
+
+  if (c === '{' || c === '(') {
+    throw new ZamlError('syntax-error', pos, unexp(c, '. Did you forget a colon?'))
+  }
+
+  if (c === ',' || c === '}') {
+    pos.newcol()
+    return 'str'
+  }
+
+  if (c === ':') {
+    pos.newcol()
     while (pos.skipWhitespace(source)) {}
 
-    let c = source[pos.i]
-    let d = source[pos.i+1]
+    let c2 = source[pos.i]
 
-    if (c === '{' || c === '(') {
-      throw ZamlError.syntax(pos, source[pos.i], '. Did you forget a colon?')
+    if (c2 === '{') {
+      return parseDefs(source, pos.newcol(), true)
     }
 
-    if (c === ',' || c === '}') {
-      pos.newcol()
-      return 'str'
-    }
+    if (c2 === '(') {
+      var tuplePos = pos.copy()
+      pos.newcol() // Skip open parens
 
-    if (c === ':' && d === '{') {
-      return parseDefs(source, pos.newcol().newcol(), true)
-    }
+      while (pos.skipWhitespace(source)) {}
 
-    if (c === ':' && d === '(') {
-      var tuplePos = pos.newcol().copy()
-      var types = readTupleTypes(source, pos)
+      var types = readTupleTypes(source, pos, tuplePos)
 
       if (types.length < 2) {
         throw new ZamlError('user-error', tuplePos,
           `A tuple requires at least two types (${types.length ? 'onle one was' : 'none were'} provided).`)
       }
 
+      while (pos.skipWhitespace(source)) {}
+
       if (source[pos.i] === '{') {
         let block = parseDefs(source, pos.newcol(), true)
         types.push(block)
       }
+      if (source[pos.i] === ',') {
+        pos.newcol() // Skip since we're at the end of this type
+      }
       return types
     }
 
-    if (c === ':') {
-      let typenamePos = pos.newcol().copy()
-      let typename = readName(source, pos)
+    let typenamePos = pos.copy()
+    let typename = readName(source, pos)
 
-      if (validTypes.indexOf(typename) === -1) {
-        throw new ZamlError('user-error', typenamePos, `No such type: '${typename}'`)
-      }
+    while (pos.skipWhitespace(source)) {}
 
-      while (pos.skipWhitespace(source)) {}
-
-      let c2 = source[pos.i]
-
-      if (c2 === '{') {
-        if (typename !== 'list') {
-          throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
-        }
-        let block = parseDefs(source, pos.newcol(), true)
-        return [typename, block]
-      }
-      else if (c2 === ',' || c2 === '}' || pos.i === source.length) {
-        pos.newcol()
-        return typename
-      }
+    if (validTypes.indexOf(typename) === -1) {
+      throw new ZamlError('user-error', typenamePos, `No such type: '${typename}'`)
     }
 
-    throw ZamlError.syntax(pos, source[pos.i])
+
+    let c3 = source[pos.i]
+
+    if (c3 === '{') {
+      if (typename !== 'list') {
+        throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
+      }
+      let block = parseDefs(source, pos.newcol(), true)
+      return [typename, block]
+    }
+    else if (c3 === ',' || c3 === '}' || pos.i === source.length) {
+      pos.newcol()
+      return typename
+    }
+
+    throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
   }
 
   return 'str'
 }
 
-function readTupleTypes (source: string, pos: Pos): string[] {
-  var start = pos.copy()
+function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): string[] {
   var types: string[] = []
 
-  pos.newcol() // Skip opening parens
-
   while (pos.i < source.length) {
-    while (pos.skipWhitespace(source)) {}
-
     let c = source[pos.i]
 
     if (c === ',') {
       pos.newcol()
+      while (pos.skipWhitespace(source)) {}
       continue
     }
 
@@ -210,15 +232,17 @@ function readTupleTypes (source: string, pos: Pos): string[] {
     }
 
     if (c === ':' || c === '(') {
-      throw ZamlError.syntax(pos, c)
+      throw new ZamlError('syntax-error', pos, unexp(c))
     }
 
     if (c === '{') {
-      throw ZamlError.syntax(pos, c, ' (blocks are not allowed within a tuple type)')
+      throw new ZamlError('syntax-error', pos, unexp(c, ' (blocks are not allowed within a tuple type)'))
     }
 
     let namePos = pos.copy()
     let name = readName(source, pos)
+
+    while (pos.skipWhitespace(source)) {}
 
     if (basicTypes.indexOf(name) === -1) {
       throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, and bool.`)
@@ -226,5 +250,9 @@ function readTupleTypes (source: string, pos: Pos): string[] {
     types.push(name)
   }
 
-  throw new ZamlError('syntax-error', start, `Missing end parenthesis ')'`)
+  throw new ZamlError('syntax-error', openParenPos, `Missing end parenthesis ")"`)
+}
+
+function unexp (char: string, more='') {
+  return `Unexpected ${JSON.stringify(char)}${more}`
 }

@@ -44,4 +44,25 @@ o.spec("Schema parsing", function () {
       'redirect': ['num','str','str', { enabled: 'str' }]
     })
   })
+
+  o("tuple with other types", function () {
+    o(p('foo:(num,str),bar')).deepEquals({
+      'foo': ['num','str'],
+      'bar': 'str'
+    })
+  })
+
+  o("not whitespace sensitive", function () {
+    var result = p(`
+      x : {
+        y : (  str ,  str ) ,
+        z  :  list  {
+          e : bool
+        }
+      }
+    `)
+    o(result).deepEquals({
+      x: { y: ['str','str'], z: ['list', { e: 'bool' }] }
+    })
+  })
 })
