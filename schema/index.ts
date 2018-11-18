@@ -92,7 +92,6 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
       if (! inBlock) {
         throw ZamlError.syntax(pos, '}')
       }
-      console.log("DEF BLOCK COMPLETE")
       pos.newcol()
       return result
     }
@@ -199,7 +198,6 @@ function readTupleTypes (source: string, pos: Pos): string[] {
     while (pos.skipWhitespace(source)) {}
 
     let c = source[pos.i]
-    console.log("yo", pos.i, c)
 
     if (c === ',') {
       pos.newcol()
@@ -225,7 +223,6 @@ function readTupleTypes (source: string, pos: Pos): string[] {
     if (basicTypes.indexOf(name) === -1) {
       throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, and bool.`)
     }
-    console.log("TYPE COMPLETE", name)
     types.push(name)
   }
 

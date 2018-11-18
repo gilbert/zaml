@@ -32,13 +32,11 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
   while (pos.i < source.length) {
     let i = pos.i
     let c = source[i]
-    console.log("x", pos.i, `[${source[pos.i] === '\n' ? '\\n' : source[pos.i]}]`, inBlock?'BLOCK':'')
 
     if (c === '}') {
       if (! inBlock) {
         throw new ZamlError('syntax-error', pos, `Unexpected }`)
       }
-      console.log("BLOCK COMPLETE")
       pos.push(source)
       return results
     }
@@ -77,7 +75,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
     //
     let statementPos = pos.copy()
     let name = readWord(source, pos)
-    console.log(`>>>> ${name}`, pos.i, `(from from [${c}]:${pos.i})`)
+
     while (pos.i < source.length && pos.skipSpace(source)) {}
 
     let argsPosStart = pos.copy()
@@ -117,7 +115,6 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
     if (hasBlock) s.block = lex(source, pos, true)
 
     results.push(s)
-    console.log("STATEMENT COMPLETE", results[results.length-1])
   }
   return results
 }
@@ -134,9 +131,8 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
   for (var i=0; i < statements.length; i++) {
     const s = statements[i]
     const name = s.name
-
     const t = schema[name]
-    console.log("STATEMENT", name)
+
     if ( ! t ) {
       throw new ZamlError('user-error', s.pos, `No such config key: ${name}`)
     }
@@ -161,6 +157,7 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
     }
     else if (t.name === 'list') {
       if (s.block) {
+        // Block list
         if (s.args.length > 0) {
           throw new ZamlError('user-error', s.argsPos[0], listFormatError)
         }
@@ -184,7 +181,6 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
       }
       else {
         // Inline list
-        console.log(`PARSING ARGS [${s.argsPos[1].i}:${source[s.argsPos[1].i]}]`)
         assign(parseArgs(source, s.argsPos[0], s.argsPos[1], opts))
       }
     }
@@ -202,7 +198,6 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
     }
     else if (t.name === 'block') {
       if (! s.block) {
-        console.log("???", s)
         throw new ZamlError('user-error', s.pos, `Key '${s.name}' requires a block.`)
       }
       assign(parseZaml(source, t.blockSchema, s.block, opts))
@@ -250,17 +245,14 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
 
 function parseQuotedString (source: string, pos: Pos, end: Pos): string {
   var start = pos.copy()
-  console.log("quote", pos.i, `[${source[pos.i]}]`)
   // TODO: Support backslash quotes
   while (pos.i < end.i && source[pos.i] !== '"') {
     if (pos.skipNewline(source)) {
       throw new ZamlError('syntax-error', pos, `Newlines are not allowed in quoted strings`)
     }
     pos.newcol()
-    console.log(`q ${pos.i} [${source[pos.i]}]`)
   }
   if (pos.i === end.i) {
-    console.log("hrm", `[${source[pos.i-1]}${source[pos.i]}:]`)
     throw new ZamlError('syntax-error', start, `Unexpected EOF: Missing end quote`)
   }
   var str = source.substring(start.i, pos.i)
@@ -280,7 +272,6 @@ function parseArgs (
 
   while (pos.i < end.i) {
     let c = source[pos.i]
-    console.log("a", pos.i, `[${c}]`)
 
     if (pos.skipSpace(source)) continue
 
@@ -289,7 +280,6 @@ function parseArgs (
       let start = pos.copy()
       let arg = parseQuotedString(source, pos.newcol(), end)
       args.push(map(withVars(arg, start, opts), args.length, start))
-      console.log("ARG COMPLETE", arg)
     }
 
     // Argument complete
@@ -300,7 +290,6 @@ function parseArgs (
       }
       let arg = source.substring(start.i, pos.i)
       args.push(map(withVars(arg, start, opts), args.length, start))
-      console.log("ARG COMPLETE", arg)
     }
   }
 
@@ -309,7 +298,6 @@ function parseArgs (
 
 function readWord (source: string, pos: Pos): string {
   var start = pos.i
-  console.log("_word", pos.i, `[${source[pos.i]}]`)
   while (pos.i < source.length && ! whitespace.test(source[pos.i])) {
     pos.newcol()
   }
