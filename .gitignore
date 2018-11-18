@@ -1,5 +1,3 @@
 node_modules/
 index.js
-lib/*.js
-parser/*.js
-schema/*.js
+src/**/*.js

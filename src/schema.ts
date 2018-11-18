@@ -12,7 +12,7 @@ import {
   basicTypes,
   whitespace,
   reservedOps,
-} from '../lib/util'
+} from './util'
 
 export function createSchema (definitions: any) {
   definitions = {...definitions}
