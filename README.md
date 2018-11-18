@@ -4,20 +4,33 @@ JSON is tedious to type for humans. YAML is error-prone and hard to parse. TOML 
 
 Enter Zaml.
 
-Zaml is the [final form](https://youtu.be/zGdFXUJ1o1U?t=4m17s) of configuration files. It's a zero-dependency, type-checking machine. It takes the pain out of your gain.
+Zaml is the [final form](https://youtu.be/zGdFXUJ1o1U?t=4m17s) of configuration files. It's a zero-dependency, type-checking machine that points out your errors as graceful as a dove. It takes the pain out of your gain.
 
 Never again deal with the boilerplate of validating config data structures. Make config easier for you *and* your users.
 
 Zaml isn't even an ancronym. That's how good it is.
 
-## Introduction
+## Install
 
-**NOTE: ZAML IS STILL IN ITS TRANSFORMATION SEQUENCE.** THESE DOCS ARE NOT FULLY FUNCTIONAL. Check the [tests](./tests) for current progress.
+    npm install zaml
+
+or
+
+    yarn add zaml
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Syntax & Features](#features)
+- [Using the JavaScript API](#javascript-api)
+- [Roadmap](#roadmap)
+
+## Introduction
 
 Zaml's syntax is inspired by [NGINX's conf format](https://nginx.org/en/docs/beginners_guide.html#conf_structure). Clean, effective, and not obsessed with your shift key:
 
 ```js
-import {parse} = from 'zaml'
+import {parse} from 'zaml'
 
 var schema = 'fileRoots:{dev:list,prod:list}'
 
@@ -39,6 +52,7 @@ var zamlContent = `
 `
 
 var result = parse(zamlContent, schema, { vars: process.env })
+console.log("Got result:", result)
 ```
 
 Parsing the above will result in this data structure:
@@ -60,7 +74,7 @@ Parsing the above will result in this data structure:
 
 No quotes, no commas, no colons. Only what you need and nothing else.
 
-Your users also get nice, accurate error messages if they make a mistake writing their config.
+Your users also get nice, accurate error messages if they make a mistake writing their config. It's a win-win!
 
 ## Features
 
@@ -70,7 +84,7 @@ Here are Zaml's features and examples, from simplest to most complex.
 
 A comment is any line that **begins** with `#`
 
-```
+```zaml
 # I am a comment
 # title This is a comment
 title This is # not a comment
@@ -80,7 +94,7 @@ title This is # not a comment
 
 A `bool` accepts `true` or `false`
 
-```
+```zaml
 # schema = autoCleanup:bool
 autoCleanup true
 
@@ -91,7 +105,7 @@ autoCleanup true
 
 A `num` accepts a single numerical value.
 
-```
+```zaml
 # schema = port:num
 port 3000
 
@@ -102,7 +116,7 @@ port 3000
 
 A `str` is the default type of any unspecified schema key.
 
-```
+```zaml
 # schema = title OR title:str
 title ~/home/my-proj
 
@@ -113,7 +127,7 @@ title ~/home/my-proj
 
 A `kv` is a set of key-value pairs. It requires a block.
 
-```
+```zaml
 # schema = redirects:kv
 redirects {
   /contact       /contact-us
@@ -129,7 +143,7 @@ Please note Zaml **is not** indentation sensitive.
 
 A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
 
-```
+```zaml
 # schema = tags:list
 
 # Inline example
@@ -145,9 +159,9 @@ tags {
 #=> { "tags": ["library", "npm", "js"] }
 ```
 
-You can also enhance your list by making a [namespace](#namespace) available to each `str`.
+You can also enhance your list by making a [block](#block) available to each `str`.
 
-```
+```zaml
 # schema = users:list{admin:bool}
 users {
   andy@xx.com
@@ -160,7 +174,7 @@ users {
 #=> { "users": [["andy"], ["beth", {admin: true}], ["carl"]] }
 ```
 
-Note how a namespace changes the shape of the above parsed result. This allows you to use destructuring for each result:
+Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each result:
 
 ```js
 var result = parse(source, schema)
@@ -172,11 +186,11 @@ for (let [user, options] of result.users) {
 }
 ```
 
-### namespace
+### block
 
-A namespace is a specified inner schema. It translates to a hash that only allows your specified keys.
+A block is a specified inner schema. It translates to a hash that only allows your specified keys.
 
-```
+```zaml
 # schema = project:{title,tags:list}
 project {
   title My Sweet App
@@ -190,7 +204,7 @@ project {
 
 Appending the `|multi` attribute to a key allows your users to specify it more than once.
 
-```
+```zaml
 # schema = project|multi:{title,type}
 project {
   title A
@@ -205,7 +219,7 @@ project {
 
 It will also guarantee your key is always present, even if the user does not provide any.
 
-```
+```zaml
 # schema = project|multi:{title,type}
 
 # (intentionally left blank)
@@ -213,9 +227,117 @@ It will also guarantee your key is always present, even if the user does not pro
 #=> { "project": [] }
 ```
 
+### tuple
+
+A tuple captures two or more values for a given key. You can specify one with parenthesis:
+
+```zaml
+# schema = redirect:(num,str,str)
+
+redirect 302 /old /new
+
+#=> { "redirect": [302, "old", "new"] }
+```
+
+Please note that tuples may only contain basic types (`str`, `num`, and `bool`). However, you're free to mix tuples with other features:
+
+```zaml
+# schema = redirect|multi:(num,str,str){enableAt}
+
+redirect 301 /x /y
+
+redirect 302 /old /new {
+  enableAt 2020-10-10
+}
+
+#=> { "redirect": [[301, "x", "y"], [302, "/old", "/new", { "enableAt": "2020-10-10" }]] }
+```
+
+## JavaScript API
+
+- [parse(source, schema [, parseOptions])](#parse)
+
+### parse
+
+The primary way you interact with Zaml is through its `parse` function. This is how you convert Zaml source to a JavaScript data structure.
+
+`port` takes two, maybe three arguments:
+
+1. The Zaml source code (as a string)
+2. A schema to parse with (as a string)
+3. [Options to enable extra features](#parse-options) (optional parameter)
+
+Here's a full example that includes reading from the file system. Assuming you have the following `my-config.zaml`:
+
+```zaml
+host www.example.com
+port 443
+disallow /admin
+disallow /dashboard
+```
+
+You can parse the above with this node.js code:
+
+```js
+var fs = require('fs')
+var zaml = require('zaml')
+
+var source = fs.readFileSync(__dirname + '/my-config.zaml')
+var result = zaml.parse(source, 'host,port:num,disallow|multi')
+result
+//=> { "host": "www.example.com", "port": 443, "disallow": ["/admin", "/dashboard"] }
+```
+
+## Parse Options
+
+parseOptions, the third parameter to `parse()`, has the following options:
+
+### vars
+
+Type: `Record<string,string>`
+
+Each key-value in the provided `vars` object will be made available for users to interpolate using the `$` operator. Example:
+
+```js
+let source = `
+  title Welcome to $APP_NAME
+`
+zaml.parse(source, 'title:str', {
+  vars: { APP_NAME: 'My App' }
+})
+//=> { "title": "Welcome to My App" }
+```
+
+Note that you can easily use this feature to provide the user access to their own environment variables in a node.js environment:
+
+```js
+zaml.parse(source, 'title:str', {
+  vars: process.env
+})
+```
+
+### failOnUndefinedVars
+
+If `vars` is set, then setting `failOnUndefinedVars` to `true` will ensure users cannot use variables that are not defined. This is useful if you want to e.g. ensure a key is always defined:
+
+```js
+let source = `
+  title Welcome to $iDontExist
+`
+//
+// This will throw an error!
+//
+zaml.parse(source, 'title:str', {
+  vars: { anyOtherKey: '' },
+  failOnUndefinedVars: true,
+})
+```
+
 ## Roadmap
 
 - Discuss solution for multiline strings
+- Default values for tuple types
+- Command line interface?
 
 ## Developing
 
