@@ -1,3 +1,6 @@
+[![npm](https://img.shields.io/npm/v/zaml.svg)](https://www.npmjs.com/package/zaml)
+[![Build Status](https://travis-ci.org/gilbert/zaml.svg?branch=master)](https://travis-ci.org/gilbert/zaml)
+
 # Zaml – The Final Form of Configuration Files
 
 JSON is tedious to type for humans. YAML is [error-prone and hard to parse](https://arp242.net/weblog/yaml_probably_not_so_great_after_all.html). TOML is verbose for nested data structures.
