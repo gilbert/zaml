@@ -46,10 +46,22 @@ export class ZamlError extends Error {
 
     var lines = source.split('\n')
     var {line, col} = this.pos
+
+    var lineNo = String(line)
+    var prevLineNo = String(line-1)
+
+    if (lineNo.length > prevLineNo.length) {
+      prevLineNo = spacer(lineNo.length - prevLineNo.length) + prevLineNo
+    }
+    else if (prevLineNo.length > lineNo.length) {
+      lineNo = spacer(prevLineNo.length - lineNo.length) + lineNo
+    }
+
     this.message =
       this.message + '\n' +
-      `  on line ${line} col ${col}\n` +
-      `    ${lines[line-1]}\n    ${ range(0,col-1).map(_ => ' ').join('') }^`
+      `  on line ${line} col ${col}\n\n` +
+      (line > 1 ? `  ${prevLineNo}│ ${lines[line-2]}\n` : '') +
+      `  ${lineNo}│ ${lines[line-1]}\n  ${ spacer(col-1 + lineNo.length+2) }^`
   }
 }
 
@@ -65,6 +77,10 @@ function range (start: number, end: number) {
   var result = []
   for (var i=start; i < end; i++) result.push(i)
   return result
+}
+
+function spacer (length: number) {
+  return range(0, length).map(_ => ' ').join('')
 }
 
 export class Pos {
