@@ -145,7 +145,7 @@ redirects {
   /profile/:user /u/:user
 }
 
-#=> { "redirects": { "/contact": "/contact-us", "/profile/:user": "/" } }
+#=> { "redirects": { "/contact": "/contact-us", "/profile/:user": "/u/:user" } }
 ```
 
 Please note Zaml **is not** indentation sensitive.
