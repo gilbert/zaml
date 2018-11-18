@@ -122,17 +122,19 @@ o.spec("ParseOptions", function () {
       str $A$A$B
       lst $C $C
       hsh {
-        \\$D $E
+        $D ddd
+        eee $E
+        $F $X
       }
     `, 'num:num,str,lst:list,hsh:kv', {
-      vars: { X: '20', A: 'a', B: 'b', C: 'c', D: 'd', E: 'e' }
+      vars: { X: '20', A: 'a', B: 'b', C: 'c', D: 'd', E: 'e', F: 'f' }
     })
 
     o(result).deepEquals({
       num: 20,
       str: 'aab',
       lst: ['c', 'c'],
-      hsh: { d: 'e' },
+      hsh: { d: 'ddd', eee: 'e', f: '20' },
     })
   })
 

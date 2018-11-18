@@ -3,7 +3,7 @@
 //
 export const brackets = /[\(\)\{\}\[\]]/
 export const whitespace = /[ \t\n\r]/
-export const reservedOps = /[\^&#@~`$]/
+export const reservedOps = /[\^&#@~`]/
 export const trailingSpaces = /[ \t]*$/
 
 //
