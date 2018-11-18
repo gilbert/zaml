@@ -106,7 +106,7 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
 
     while (pos.skipWhitespace(source)) {}
 
-    var type = readType(source, pos, name)
+    var type = readType(source, pos)
     result[name] = type
 
     while (pos.skipWhitespace(source)) {}
@@ -131,7 +131,7 @@ function readName (source: string, pos: Pos): string {
   return source.substring(start, pos.i)
 }
 
-function readType (source: string, pos: Pos, key: string) {
+function readType (source: string, pos: Pos) {
   if (pos.i >= source.length) {
     // At this point we've reached the end without
     // a specified type. Return the default.
