@@ -1,6 +1,6 @@
 var o = require("ospec")
 var {checkError} = require('./helpers')
-var {parse} = require('../index.js')
+var {parse} = require('../dist/index.js')
 
 o.spec("Errors", function () {
   o("duplicate keys", function () {})

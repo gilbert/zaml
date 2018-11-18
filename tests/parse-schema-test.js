@@ -1,5 +1,5 @@
 var o = require("ospec")
-var {parseSchema: p} = require('../src/schema')
+var {parseSchema: p} = require('../dist/src/schema')
 
 o.spec("Schema parsing", function () {
 

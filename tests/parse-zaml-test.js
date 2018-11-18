@@ -1,5 +1,5 @@
 var o = require("ospec")
-var {parse} = require('../index.js')
+var {parse} = require('../dist/index.js')
 
 o("basic types", function () {
   var result = parse(`

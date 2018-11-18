@@ -1,11 +1,15 @@
 {
   "name": "zaml",
-  "version": "0.0.1",
+  "version": "0.9.0",
   "description": "Fast, type-checked, zero-dependency configuration.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "start": "tsc --watch",
-    "test": "node index.js"
+    "test": "ospec",
+    "prepare": "npm run build",
+    "prepublishOnly" : "npm test"
   },
   "keywords": ["config", "parser", "format", "schema", "validation"],
   "author": "https://github.com/gilbert",

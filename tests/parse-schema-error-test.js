@@ -1,6 +1,6 @@
 var o = require("ospec")
 var {checkError} = require('./helpers')
-var {parseSchema: p} = require('../src/schema')
+var {parseSchema: p} = require('../dist/src/schema')
 
 o.spec("Schema Parse Errors", function () {
 
