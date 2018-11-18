@@ -15,13 +15,13 @@ o.spec("Schema parsing", function () {
     })
   })
 
-  o("namespace", function () {
+  o("block", function () {
     o(p('user:{name,score:num}')).deepEquals({
       user: { name: 'str', score: 'num' }
     })
   })
 
-  o("list namespace", function () {
+  o("list block", function () {
     o(p('users:list{admin:bool}')).deepEquals({
       users: ['list', { admin: 'bool' }]
     })
@@ -39,7 +39,7 @@ o.spec("Schema parsing", function () {
     })
   })
 
-  o("tuple namespace", function () {
+  o("tuple block", function () {
     o(p('redirect:(num,str,str){enabled}')).deepEquals({
       'redirect': ['num','str','str', { enabled: 'str' }]
     })

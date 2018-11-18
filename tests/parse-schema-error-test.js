@@ -14,7 +14,7 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
-  o("namespace brackets without a colon", function () {
+  o("block brackets without a colon", function () {
     try {
       p(`project{name}`)
       o("Should not be successful").equals(false)
@@ -68,13 +68,13 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
-  o("tuple type namespace", function () {
+  o("tuple type block", function () {
     try {
       p(`project:(str{})`)
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'syntax-error', 1, 13, /unexpected/i, /namespace/i, /not allowed/i)
+      checkError(err, 'syntax-error', 1, 13, /unexpected/i, /block/i, /not allowed/i)
     }
   })
 

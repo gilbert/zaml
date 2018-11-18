@@ -33,7 +33,7 @@ export function createSchema (definitions: any) {
     let t = definitions[configName]
 
     if (Array.isArray(t) && t[0] === 'list' && isObj(t[1])) {
-      schema[key] = { name: t[0], schema: createSchema(t[1]), multi }
+      schema[key] = { name: t[0], blockSchema: createSchema(t[1]), multi }
     }
     else if (Array.isArray(t)) {
       let hasBlock = isObj(t[t.length-1])
@@ -46,7 +46,7 @@ export function createSchema (definitions: any) {
         }
       }
       schema[key] = hasBlock
-        ? { name: 'tuple', types: t, schema: createSchema(t[t.length-1]), multi }
+        ? { name: 'tuple', types: t, blockSchema: createSchema(t[t.length-1]), multi }
         : { name: 'tuple', types: t, multi }
     }
     else if (t === 'num' || t === 'str') {
@@ -62,7 +62,7 @@ export function createSchema (definitions: any) {
       schema[key] = { name: t, multi }
     }
     else if (isObj(t)) {
-      schema[key] = { name: 'namespace', schema: createSchema(t), multi }
+      schema[key] = { name: 'block', blockSchema: createSchema(t), multi }
     }
     else {
       throw new ZamlError('author-error', null, `Invalid schema type: ${JSON.stringify(t)}`)
@@ -152,8 +152,8 @@ function readType (source: string, pos: Pos) {
       }
 
       if (source[pos.i] === '{') {
-        let namespace = parseDefs(source, pos.newcol(), true)
-        types.push(namespace)
+        let block = parseDefs(source, pos.newcol(), true)
+        types.push(block)
       }
       return types
     }
@@ -172,10 +172,10 @@ function readType (source: string, pos: Pos) {
 
       if (c2 === '{') {
         if (typename !== 'list') {
-          throw new ZamlError('user-error', pos, `Only list types, not '${typename}' types, may have a sub-namespace`)
+          throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
         }
-        let namespace = parseDefs(source, pos.newcol(), true)
-        return [typename, namespace]
+        let block = parseDefs(source, pos.newcol(), true)
+        return [typename, block]
       }
       else if (c2 === ',' || c2 === '}' || pos.i === source.length) {
         pos.newcol()
@@ -216,7 +216,7 @@ function readTupleTypes (source: string, pos: Pos): string[] {
     }
 
     if (c === '{') {
-      throw ZamlError.syntax(pos, c, ' (namespaces are not allowed in a tuple)')
+      throw ZamlError.syntax(pos, c, ' (blocks are not allowed within a tuple type)')
     }
 
     let namePos = pos.copy()

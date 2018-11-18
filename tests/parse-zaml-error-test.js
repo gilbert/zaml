@@ -24,7 +24,7 @@ o.spec("Errors", function () {
   o("excess boolean values", function () {})
   o("excess number values", function () {})
 
-  o("lists without namespaces", function () {
+  o("lists no block", function () {
     try {
       parse(`
         tags {
@@ -43,9 +43,10 @@ o.spec("Errors", function () {
     }
   })
 
+  o("tuple no block", function () {})
+
   o("missing end bracket", function () {})
   o("failOnUndefinedVars when vars is not set", function () {})
   o("incorrect number of tuple args", function () {})
   o("accurate tuple boolean error", function () {})
-  o("no block tuple", function () {})
 })

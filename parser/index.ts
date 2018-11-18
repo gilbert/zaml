@@ -167,9 +167,9 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
 
         let list = []
         for (let s2 of s.block) {
-          if (t.schema) {
+          if (t.blockSchema) {
             let str = withVars(s2.name, s2.pos, opts)
-            list.push(s2.block ? [str, parseZaml(source, t.schema, s2.block, opts)] : [str])
+            list.push(s2.block ? [str, parseZaml(source, t.blockSchema, s2.block, opts)] : [str])
           }
           else if (s2.block) {
             throw new ZamlError('user-error', s2.argsPos[0], `The '${s.name}' list does not accept a block.`)
@@ -200,12 +200,12 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
       }
       assign(hash)
     }
-    else if (t.name === 'namespace') {
+    else if (t.name === 'block') {
       if (! s.block) {
         console.log("???", s)
-        throw new ZamlError('user-error', s.pos, `Namespace '${s.name}' requires a block.`)
+        throw new ZamlError('user-error', s.pos, `Key '${s.name}' requires a block.`)
       }
-      assign(parseZaml(source, t.schema, s.block, opts))
+      assign(parseZaml(source, t.blockSchema, s.block, opts))
     }
     else if (t.name === 'tuple') {
       // if (args.length !== t.types.length) {}
@@ -234,8 +234,8 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
         }
       })
 
-      if (s.block && t.schema) {
-        args.push(parseZaml(source, t.schema, s.block, opts))
+      if (s.block && t.blockSchema) {
+        args.push(parseZaml(source, t.blockSchema, s.block, opts))
       }
 
       assign(args)

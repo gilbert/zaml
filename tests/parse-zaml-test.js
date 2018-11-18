@@ -60,7 +60,7 @@ o("list", function () {
   })
 })
 
-o("list namespace", function () {
+o("list block", function () {
   var result = parse(`
     users {
       andy
@@ -115,7 +115,7 @@ o("tuple", function () {
   })
 })
 
-o("tuple namespace", function () {
+o("tuple block", function () {
   var result = parse(`
     redirect 301 /old /new {
       enabled false

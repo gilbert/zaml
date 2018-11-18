@@ -14,10 +14,10 @@ type ValueType
   = ({ name: 'num' }
   | { name: 'str' }
   | { name: 'kv' }
-  | { name: 'list', schema?: Schema }
+  | { name: 'list', blockSchema?: Schema }
   | { name: 'bool' }
-  | { name: 'namespace', schema: Schema }
-  | { name: 'tuple', types: BasicType[], schema?: Schema }
+  | { name: 'block', blockSchema: Schema }
+  | { name: 'tuple', types: BasicType[], blockSchema?: Schema }
   ) & { multi: boolean }
 
 export type Schema = Record<string,ValueType>
