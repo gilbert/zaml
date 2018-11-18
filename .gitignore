@@ -2,3 +2,4 @@ node_modules/
 index.js
 src/**/*.js
 dist/
+package-lock.json
