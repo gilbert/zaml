@@ -4,7 +4,7 @@
 export const brackets = /[\(\)\{\}\[\]]/
 export const whitespace = /[ \t\n\r]/
 export const reservedOps = /[\^&#@~`]/
-export const trailingSpaces = /[ \t]*$/
+export const trailingWhitespace = /[ \t\n\r]*$/
 
 //
 // Schema defs

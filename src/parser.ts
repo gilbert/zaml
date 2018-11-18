@@ -5,7 +5,7 @@ import {
   brackets,
   whitespace,
   reservedOps,
-  trailingSpaces
+  trailingWhitespace
 } from './util'
 
 type Statement = {
@@ -103,7 +103,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
       argsPosEnd.col -= 1
     }
 
-    let args = source.substring(argsPosStart.i, argsPosEnd.i).replace(trailingSpaces, '')
+    let args = source.substring(argsPosStart.i, argsPosEnd.i).replace(trailingWhitespace, '')
 
     let s: Statement = {
       pos: statementPos,
