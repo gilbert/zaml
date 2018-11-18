@@ -1,6 +1,6 @@
 # Zaml – The Final Form of Configuration Files
 
-JSON is tedious to type for humans. YAML is error-prone and hard to parse. TOML is verbose for nested data structures.
+JSON is tedious to type for humans. YAML is [error-prone and hard to parse](https://arp242.net/weblog/yaml_probably_not_so_great_after_all.html). TOML is verbose for nested data structures.
 
 Enter Zaml.
 
@@ -23,7 +23,9 @@ or
 - [Introduction](#introduction)
 - [Syntax & Features](#features)
 - [Using the JavaScript API](#javascript-api)
+- [Spec](#spec)
 - [Roadmap](#roadmap)
+- [Contributing](#contributing)
 
 ## Introduction
 
@@ -55,6 +57,8 @@ var result = parse(zamlContent, schema, { vars: process.env })
 console.log("Got result:", result)
 ```
 
+Run [this example in your browser](https://flems.io/#0=N4IgZglgNgpgziAXAbVAOwIYFsZJAOgAsAXLKEAGhAGMB7NYmBvAHkIGYA+FjAAkIBOMMAF4AOiBLEADnEQB6eQHMIxQgFcARvjpZl0TTAHF5AL2xQJnAFoWW8jJ14B5dTLeJ7HTmLQtpQrwQACbiIEJw6lDEcFb2ATCclCBwMLDUxBD0CIggAIyIAEwALCAAvhTo2Li5+ABWCFR0DEzEeABuGAK85mQAwvSMDLwivAAGvry8AMS8ACqEEHBBy7ZkAISTvJCwAEq0tDG8wFtTwTDtx6dTvAAkABLOALIAovLn7fKpAu0Q1PDXKYPZ5vD5fYgYRixNA3Xhla4BWjBK4w2F3R6veSI4JfIy-f5wAC0hUB6JBWIESPBkIBqKm8NRDImaE63Tg1EIMCwfFGAHIdjB9oc5MAPogoEtiBRseLJWVeb5WbxWctRsBeBiXoheLz5IRaDgHBL-ry4b5iAIAJ4oqZK2huEa8NZQfDSLqpAAUvSgAxaDAovHZnO5AfVKrhAEothEojF8BA0GgjPc5k8ADKOgBSAGVnAA5fBwC0JlRgS0e+1StBRKAUU28qNoBnUSEcj1GAQRm28GPRODxxPJ1MZ0Yd-A4OBwDBKGC+BnJXTSaBGPCaDCGchUVLpTLZPAFPIAdnKlRAmBweB0k4Xg1aeHKAF0qBK0ABrHKoM-VPAJ84AD3wTRKQAd2+epGhAdQBHIXIpFkBR5HUNBpFfJQdANMwLAAAQABnwABOfBCneSV5F-GAAKA2hQKMcDkmIS1pBqFJqAECBpDaMoHzKIA)!
+
 Parsing the above will result in this data structure:
 
 ```json
@@ -76,9 +80,13 @@ No quotes, no commas, no colons. Only what you need and nothing else.
 
 Your users also get nice, accurate error messages if they make a mistake writing their config. It's a win-win!
 
+### More Examples
+
+See the [examples/](./examples) folder for more complete syntax & schema examples like the above.
+
 ## Features
 
-Here are Zaml's features and examples, from simplest to most complex.
+Here are Zaml's features, each with an example use, from simplest to most complex.
 
 ### Comments
 
@@ -199,6 +207,25 @@ project {
 
 #=> { "project": { "title": "My Sweet App", "tags": ["js", "npm", "zaml"] } }
 ```
+
+### key|list
+
+NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
+
+If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a [block](#block).
+
+```zaml
+# schema = when|list{include|multi}
+
+when development test {
+  include lib/profiler.js
+  include linter.js
+}
+
+#=> { "when": [["development", "test"], { include: ["lib/profiler.js", "linter.js"] }] }
+```
+
+Note that a [block](#block) the only valid type when using the `|list` attribute.
 
 ### key|multi
 
@@ -333,11 +360,39 @@ zaml.parse(source, 'title:str', {
 })
 ```
 
+## Spec
+
+Zaml has not yet reached 1.0, so there is no spec as of yet. However, here's a rough ABNF grammar for the lexer:
+
+```
+line = statement | comment
+statement = key rest ["{\n" *statement "}"] "\n"
+
+key = string-with-no-whitespace
+rest = string-with-no-newlines
+
+comment = "#" rest ("\n" | EOF)
+```
+
+After lexing, the parser uses the schema to determine how to parse the `rest` and `*statement` for each statement.
+
 ## Roadmap
 
-- Discuss solution for multiline strings
-- Default values for tuple types
+- Enhanced `kv` type for arbitrarily-nested arbitrary data?
+- Multiline strings? `text` type?
+- Split `num` into `int` and `float`?
+- Pluggable validation?
+- Default values for tuple types?
+- Required fields?
 - Command line interface?
+
+## Contributing
+
+Interested in contributing? There are several ways you can help:
+
+- Open or discuss an issue for an item on the roadmap
+- Implement Zaml in another programming language
+- Help start a spec!
 
 ## Developing
 
