@@ -1,6 +1,6 @@
 {
   "name": "zaml",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Fast, type-checked, zero-dependency configuration.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
