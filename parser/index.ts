@@ -20,7 +20,9 @@ type Statement = {
 type ParseResult = any
 
 export type ParseOptions = {
+  /** Variables to make available for interpolation within Zaml source code. */
   vars?: Record<string,string>,
+  /** If set to true, parsing will fail when a user tries to use a variable that does not exist. */
   failOnUndefinedVars?: boolean,
 }
 
@@ -96,21 +98,25 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
     }
     if (pos.i === source.length) { argsPosEnd = pos.copy() }
 
+    let hasBlock = source[argsPosEnd.i-1] === '{'
+    if (hasBlock) {
+      // Backtrack
+      argsPosEnd.i -= 1
+      argsPosEnd.col -= 1
+    }
+
     let args = source.substring(argsPosStart.i, argsPosEnd.i).replace(trailingSpaces, '')
-    let block = args[args.length-1] === '{'
-      ? lex(source, pos, true)
-      : undefined
 
-    if (block) console.log("GOT DA BLOCK", args, block)
-
-    results.push({
+    let s: Statement = {
       pos: statementPos,
       type: 'pre-statement',
       name: name,
       args: args,
       argsPos: [argsPosStart, argsPosEnd],
-      block: block,
-    })
+    }
+    if (hasBlock) s.block = lex(source, pos, true)
+
+    results.push(s)
     console.log("STATEMENT COMPLETE", results[results.length-1])
   }
   return results
@@ -126,10 +132,10 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
   }
 
   for (var i=0; i < statements.length; i++) {
-    let s = statements[i]
-    let name = s.name
+    const s = statements[i]
+    const name = s.name
 
-    let t = schema[name]
+    const t = schema[name]
     console.log("STATEMENT", name)
     if ( ! t ) {
       throw new ZamlError('user-error', s.pos, `No such config key: ${name}`)
@@ -149,26 +155,14 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
       let val = withVars(s.args, s.pos, opts)
       if (val !== 'true' && val !== 'false') {
         throw new ZamlError('user-error', s.argsPos[0],
-`Invalid boolean: '${val}'
-  Value must be true or false.`
-        )
+          `Invalid boolean: '${val}'. Value must be true or false.`)
       }
       assign(val === 'true')
     }
     else if (t.name === 'list') {
       if (s.block) {
-        if (s.args.length !== 1) {
-          throw new ZamlError('user-error', s.argsPos[0],
-  `You may provide a block or inline arguments to a list, but not both.
-Examples:
-  ✓ a_list x y z
-  ✓ a_list {
-      x
-      y
-      z
-    }
-  `
-          )
+        if (s.args.length > 0) {
+          throw new ZamlError('user-error', s.argsPos[0], listFormatError)
         }
 
         let list = []
@@ -213,6 +207,39 @@ Examples:
       }
       assign(parseZaml(source, t.schema, s.block, opts))
     }
+    else if (t.name === 'tuple') {
+      // if (args.length !== t.types.length) {}
+      let args = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, k, pos) => {
+        let t2 = t.types[k]
+        //
+        // No need to transform with withVars at this point since
+        // parseArgs has already done so.
+        //
+        if (t2 === 'num') {
+          return Number(arg)
+        }
+        else if (t2 === 'str') {
+          return arg
+        }
+        else if (t2 === 'bool') {
+          if (arg !== 'true' && arg !== 'false') {
+            throw new ZamlError('user-error', pos,
+              `Invalid boolean: '${arg}'. Value must be true or false.`)
+          }
+          return arg === 'true'
+        }
+        else {
+          throw new ZamlError('unexpected-error', pos,
+            `Invalid tuple type '${JSON.stringify(t2)}' for arg '${JSON.stringify(arg)}' (Shouldn't be possible)`)
+        }
+      })
+
+      if (s.block && t.schema) {
+        args.push(parseZaml(source, t.schema, s.block, opts))
+      }
+
+      assign(args)
+    }
     else {
       throw new ZamlError('unexpected-error', null, `Shouldn't be possible (${JSON.stringify(t)})`)
     }
@@ -241,7 +268,13 @@ function parseQuotedString (source: string, pos: Pos, end: Pos): string {
   return str
 }
 
-function parseArgs (source: string, start: Pos, end: Pos, opts: ParseOptions): string[] {
+function parseArgs (
+  source: string,
+  start: Pos,
+  end: Pos,
+  opts: ParseOptions,
+  map: (arg: string, i: number, pos: Pos) => any = id
+): string[] {
   var args: string[] = []
   var pos = start.copy()
 
@@ -255,7 +288,7 @@ function parseArgs (source: string, start: Pos, end: Pos, opts: ParseOptions): s
     if (c === '"') {
       let start = pos.copy()
       let arg = parseQuotedString(source, pos.newcol(), end)
-      args.push(withVars(arg, start, opts))
+      args.push(map(withVars(arg, start, opts), args.length, start))
       console.log("ARG COMPLETE", arg)
     }
 
@@ -266,7 +299,7 @@ function parseArgs (source: string, start: Pos, end: Pos, opts: ParseOptions): s
         pos.newcol()
       }
       let arg = source.substring(start.i, pos.i)
-      args.push(withVars(arg, start, opts))
+      args.push(map(withVars(arg, start, opts), args.length, start))
       console.log("ARG COMPLETE", arg)
     }
   }
@@ -294,3 +327,16 @@ function withVars (str: string, origin: Pos, opts: ParseOptions) {
     return val || ''
   })
 }
+
+function id <T>(x: T) { return x }
+
+const listFormatError =
+  `You may provide a block or inline arguments to a list, but not both.
+Examples:
+  ✓ a_list x y z
+  ✓ a_list {
+      x
+      y
+      z
+    }
+`

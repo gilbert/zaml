@@ -9,6 +9,7 @@ export const trailingSpaces = /[ \t]*$/
 //
 // Schema defs
 //
+type BasicType = 'num' | 'str' | 'bool'
 type ValueType
   = ({ name: 'num' }
   | { name: 'str' }
@@ -16,6 +17,7 @@ type ValueType
   | { name: 'list', schema?: Schema }
   | { name: 'bool' }
   | { name: 'namespace', schema: Schema }
+  | { name: 'tuple', types: BasicType[], schema?: Schema }
   ) & { multi: boolean }
 
 export type Schema = Record<string,ValueType>

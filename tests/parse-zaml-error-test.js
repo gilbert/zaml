@@ -3,6 +3,8 @@ var {checkError} = require('./helpers')
 var {parse} = require('../index.js')
 
 o.spec("Errors", function () {
+  o("duplicate keys", function () {})
+
   o("boolean values", function () {
     try {
       parse(`
@@ -16,6 +18,11 @@ o.spec("Errors", function () {
       checkError(err, 'user-error', 2, 15, /invalid/i, /x/, /true/, /false/)
     }
   })
+
+  o("NaN", function () {})
+
+  o("excess boolean values", function () {})
+  o("excess number values", function () {})
 
   o("lists without namespaces", function () {
     try {
@@ -35,4 +42,10 @@ o.spec("Errors", function () {
       checkError(err, 'user-error', 4, 15, /block/i, /foo/)
     }
   })
+
+  o("missing end bracket", function () {})
+  o("failOnUndefinedVars when vars is not set", function () {})
+  o("incorrect number of tuple args", function () {})
+  o("accurate tuple boolean error", function () {})
+  o("no block tuple", function () {})
 })

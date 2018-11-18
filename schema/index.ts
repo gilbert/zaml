@@ -31,7 +31,25 @@ export function createSchema (definitions: any) {
     }
 
     let t = definitions[configName]
-    if (t === 'num' || t === 'str') {
+
+    if (Array.isArray(t) && t[0] === 'list' && isObj(t[1])) {
+      schema[key] = { name: t[0], schema: createSchema(t[1]), multi }
+    }
+    else if (Array.isArray(t)) {
+      let hasBlock = isObj(t[t.length-1])
+      let end = hasBlock ? t.length-2 : t.length-1
+
+      for (let i=0; i < end; i++) {
+        let t2 = t[i]
+        if (basicTypes.indexOf(t2) === -1) {
+          throw new ZamlError('author-error', null, `Invalid tuple type: ${JSON.stringify(t)}`)
+        }
+      }
+      schema[key] = hasBlock
+        ? { name: 'tuple', types: t, schema: createSchema(t[t.length-1]), multi }
+        : { name: 'tuple', types: t, multi }
+    }
+    else if (t === 'num' || t === 'str') {
       schema[key] = { name: t, multi }
     }
     else if (t === 'kv') {
@@ -39,9 +57,6 @@ export function createSchema (definitions: any) {
     }
     else if (t === 'list') {
       schema[key] = { name: t, multi }
-    }
-    else if (Array.isArray(t) && t[0] === 'list' && isObj(t[1])) {
-      schema[key] = { name: t[0], schema: createSchema(t[1]), multi }
     }
     else if (t === 'bool') {
       schema[key] = { name: t, multi }

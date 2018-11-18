@@ -103,6 +103,32 @@ o("multi", function () {
   })
 })
 
+o("tuple", function () {
+  var result = parse(`
+    redirect 301 /old /new
+  `, {
+    redirect: ['num', 'str', 'str']
+  })
+
+  o(result).deepEquals({
+    redirect: [301, '/old', '/new']
+  })
+})
+
+o("tuple namespace", function () {
+  var result = parse(`
+    redirect 301 /old /new {
+      enabled false
+    }
+  `, {
+    redirect: ['num', 'str', 'str', { enabled: 'bool' }]
+  })
+
+  o(result).deepEquals({
+    redirect: [301, '/old', '/new', { enabled: false }]
+  })
+})
+
 o.spec("ParseOptions", function () {
   o("vars", function () {
     var result = parse(`
