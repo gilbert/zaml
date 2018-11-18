@@ -150,6 +150,20 @@ redirects {
 
 Please note Zaml **is not** indentation sensitive.
 
+### block
+
+A block is a specified inner schema. It translates to a hash that only allows your specified keys.
+
+```zaml
+# schema = project:{title,private:bool}
+project {
+  title My Sweet App
+  private true
+}
+
+#=> { "project": { "title": "My Sweet App", "private": true } }
+```
+
 ### list
 
 A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
@@ -195,20 +209,6 @@ for (let [user, options] of result.users) {
   //  and undefined for andy & carl
   //
 }
-```
-
-### block
-
-A block is a specified inner schema. It translates to a hash that only allows your specified keys.
-
-```zaml
-# schema = project:{title,tags:list}
-project {
-  title My Sweet App
-  tags js npm zaml
-}
-
-#=> { "project": { "title": "My Sweet App", "tags": ["js", "npm", "zaml"] } }
 ```
 
 ### key|list
