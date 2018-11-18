@@ -1,5 +1,8 @@
+.travis.yml
 examples/
 src/
+docs/
 tests/
 tsconfig.json
 index.ts
+index.browser.js
