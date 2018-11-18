@@ -7,12 +7,7 @@ o("basic types", function () {
     y hello
     z one two
     b true
-  `, {
-    x: 'num',
-    y: 'str',
-    z: 'str',
-    b: 'bool',
-  })
+  `, 'x:num,y,z,b:bool')
 
   o(result.x).equals(10)
   o(result.y).equals('hello')
@@ -28,11 +23,7 @@ o("kv", function () {
         k2 v2
       }
     }
-  `, {
-    one: {
-      two: 'kv'
-    },
-  })
+  `, 'one:{two:kv}')
 
   o(result).deepEquals({
     one: {
@@ -88,12 +79,7 @@ o("multi", function () {
       tag hello there
       tag cool
     }
-  `, {
-    'project|multi': {
-      title: 'str',
-      'tag|multi': 'str',
-    }
-  })
+  `, 'project|multi:{title,tag|multi}')
 
   o(result).deepEquals({
     project: [
@@ -138,9 +124,7 @@ o.spec("ParseOptions", function () {
       hsh {
         \\$D $E
       }
-    `, {
-      num: 'num', str: 'str', lst: 'list', hsh: 'kv'
-    }, {
+    `, 'num:num,str,lst:list,hsh:kv', {
       vars: { X: '20', A: 'a', B: 'b', C: 'c', D: 'd', E: 'e' }
     })
 
@@ -197,9 +181,7 @@ o.spec("Syntactic features", function () {
         #d
         e
       }
-    `, {
-      items: 'list'
-    })
+    `, 'items:list')
 
     o(result).deepEquals({ items: ['a','c','e'] })
   })
