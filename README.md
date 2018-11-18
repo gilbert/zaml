@@ -172,16 +172,17 @@ A `list` is *always* sequence of `str`. A user can write lists either inline or 
 # schema = tags:list
 
 # Inline example
-tags library npm js
+tags library npm "with spaces" js
 
 # Block example
 tags {
   library
   npm
+  with spaces
   js
 }
 
-#=> { "tags": ["library", "npm", "js"] }
+#=> { "tags": ["library", "npm", "with spaces", "js"] }
 ```
 
 You can also enhance your list by making a [block](#block) available to each `str`.
