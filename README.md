@@ -396,6 +396,7 @@ Interested in contributing? There are several ways you can help:
 
 - Open or discuss an issue for an item on the roadmap
 - Implement Zaml in another programming language
+- Report any bugs you come across
 - Help start a spec!
 
 ## Developing
