@@ -382,6 +382,7 @@ After lexing, the parser uses the schema to determine how to parse the `rest` an
 
 ## Roadmap
 
+- Allow inline `kv`
 - Enhanced `kv` type for arbitrarily-nested arbitrary data?
 - Multiline strings? `text` type?
 - Split `num` into `int` and `float`?
@@ -397,6 +398,7 @@ Interested in contributing? There are several ways you can help:
 - Open or discuss an issue for an item on the roadmap
 - Implement Zaml in another programming language
 - Report any bugs you come across
+- Report a behavior that you think *should* be bug
 - Help start a spec!
 
 ## Developing

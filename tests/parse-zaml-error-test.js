@@ -24,6 +24,8 @@ o.spec("Errors", function () {
   o("excess boolean values", function () {})
   o("excess number values", function () {})
 
+  o("str no block", function () {})
+
   o("lists no block", function () {
     try {
       parse(`
