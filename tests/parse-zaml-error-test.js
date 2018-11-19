@@ -103,8 +103,19 @@ o.spec("Errors", function () {
     }
   })
 
+  o("incorrect number of tuple args", function () {
+    try {
+      parse(`
+        foo x y
+      `, 'foo:(str,str,str)')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 2, 9, /incorrect number/i, /arguments/i, /foo/, /str str str/)
+    }
+  })
+
   o("missing end bracket", function () {})
   o("failOnUndefinedVars when vars is not set", function () {})
-  o("incorrect number of tuple args", function () {})
   o("accurate tuple boolean error", function () {})
 })

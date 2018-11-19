@@ -212,7 +212,7 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
       assign(parseZaml(source, t.blockSchema, s.block, opts))
     }
     else if (t.name === 'tuple') {
-      // if (args.length !== t.types.length) {}
+      let argCount = t.blockSchema ? t.types.length-1 : t.types.length
       let args = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, k, pos) => {
         let t2 = t.types[k]
         //
@@ -238,6 +238,11 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
         }
       })
 
+      if (args.length !== argCount) {
+        let reqs = t.types.slice(0,argCount)
+        throw new ZamlError('user-error', s.pos,
+          `Incorrect number of arguments. Key '${s.name}' only accepts ${reqs.join(' ')}.`)
+      }
       if (s.block && ! t.blockSchema) {
         throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
       }
