@@ -32,10 +32,15 @@ o.spec("Errors", function () {
     }
   })
 
-  o("NaN", function () {})
-
-  o("excess boolean values", function () {})
-  o("excess number values", function () {})
+  o("NaN", function () {
+    try {
+      parse(`count nope`, { count: 'num' })
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 7, /invalid num/i, /nope/)
+    }
+  })
 
   o("lists no block", function () {
     try {

@@ -151,7 +151,11 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
       }
 
     if (t.name === 'num') {
-      assign(Number(withVars(s.args, s.pos, opts)))
+      let num = Number(withVars(s.args, s.pos, opts))
+      if (Number.isNaN(num)) {
+        throw new ZamlError('user-error', s.argsPos[0], `Invalid number: '${s.args}'`)
+      }
+      assign(num)
     }
     else if (t.name === 'str') {
       assign(withVars(s.args, s.pos, opts))
