@@ -37,8 +37,6 @@ o.spec("Errors", function () {
   o("excess boolean values", function () {})
   o("excess number values", function () {})
 
-  o("str no block", function () {})
-
   o("lists no block", function () {
     try {
       parse(`
@@ -55,6 +53,39 @@ o.spec("Errors", function () {
     }
     catch (err) {
       checkError(err, 'user-error', 4, 15, /block/i, /foo/)
+    }
+  })
+
+  o("basic type no block", function () {
+    try {
+      parse(`
+        foo {
+          title I don't accept a block
+        }`, 'foo')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 2, 13, /block/i, /foo/)
+    }
+    try {
+      parse(`
+        foo {
+          title I don't accept a block
+        }`, 'foo:num')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 2, 13, /block/i, /foo/)
+    }
+    try {
+      parse(`
+        foo {
+          title I don't accept a block
+        }`, 'foo:bool')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 2, 13, /block/i, /foo/)
     }
   })
 

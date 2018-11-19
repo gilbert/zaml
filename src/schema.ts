@@ -94,14 +94,6 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
   while (pos.skipWhitespace(source)) {}
 
   while (pos.i < source.length) {
-    if (source[pos.i] === '}') {
-      if (! inBlock) {
-        throw new ZamlError('syntax-error', pos, unexp('}'))
-      }
-      pos.newcol()
-      return result
-    }
-
     var name = readName(source, pos)
 
     while (pos.skipWhitespace(source)) {}
@@ -110,6 +102,22 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
     result[name] = type
 
     while (pos.skipWhitespace(source)) {}
+
+    if (source[pos.i] === '}') {
+      if (! inBlock) {
+        throw new ZamlError('syntax-error', pos, unexp('}'))
+      }
+      pos.newcol()
+      while (pos.skipWhitespace(source)) {}
+      return result
+    }
+    else if (source[pos.i] === ',') {
+      pos.newcol()
+      while (pos.skipWhitespace(source)) {}
+    }
+    else if (pos.i < source.length) {
+      throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
+    }
   }
   return result
 }
@@ -132,21 +140,16 @@ function readName (source: string, pos: Pos): string {
 }
 
 function readType (source: string, pos: Pos) {
-  if (pos.i >= source.length) {
+  let c = source[pos.i]
+
+  if (pos.i >= source.length || c === '}' || c === ',') {
     // At this point we've reached the end without
     // a specified type. Return the default.
     return 'str'
   }
 
-  let c = source[pos.i]
-
   if (c === '{' || c === '(') {
     throw new ZamlError('syntax-error', pos, unexp(c, '. Did you forget a colon?'))
-  }
-
-  if (c === ',' || c === '}') {
-    pos.newcol()
-    return 'str'
   }
 
   if (c === ':') {
@@ -178,9 +181,6 @@ function readType (source: string, pos: Pos) {
         let block = parseDefs(source, pos.newcol(), true)
         types.push(block)
       }
-      if (source[pos.i] === ',') {
-        pos.newcol() // Skip since we're at the end of this type
-      }
       return types
     }
 
@@ -204,7 +204,6 @@ function readType (source: string, pos: Pos) {
       return [typename, block]
     }
     else if (c3 === ',' || c3 === '}' || pos.i === source.length) {
-      pos.newcol()
       return typename
     }
 

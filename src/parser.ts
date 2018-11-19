@@ -3,6 +3,7 @@ import {
   Schema,
   ZamlError,
   brackets,
+  basicTypes,
   whitespace,
   reservedOps,
   trailingWhitespace
@@ -135,6 +136,9 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
 
     if ( ! t ) {
       throw new ZamlError('user-error', s.pos, `No such config key: ${name}`)
+    }
+    if (basicTypes.indexOf(t.name) >= 0 && s.block) {
+      throw new ZamlError('user-error', s.argsPos[1], `Key '${name}' is a ${t.name}; it does not take a block.`)
     }
 
     let assign = t.multi
