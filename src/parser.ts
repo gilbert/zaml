@@ -139,7 +139,12 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
 
     let assign = t.multi
       ? (val: any) => { result[name].push(val) }
-      : (val: any) => { result[name] = val }
+      : (val: any) => {
+        if (name in result) {
+          throw new ZamlError('user-error', s.pos, `Duplicate key '${name}'. This key may only be specified once.`)
+        }
+        result[name] = val
+      }
 
     if (t.name === 'num') {
       assign(Number(withVars(s.args, s.pos, opts)))

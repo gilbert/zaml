@@ -3,7 +3,20 @@ var {checkError} = require('./helpers')
 var {parse} = require('../dist/index.js')
 
 o.spec("Errors", function () {
-  o("duplicate keys", function () {})
+  o("duplicate keys", function () {
+    try {
+      parse(`
+        title x
+        title x
+      `, {
+        title: 'str'
+      })
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 3, 9, /duplicate key/i, /title/)
+    }
+  })
 
   o("boolean values", function () {
     try {
