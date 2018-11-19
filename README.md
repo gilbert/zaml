@@ -108,7 +108,7 @@ title This is # not a comment
 A `bool` accepts `true` or `false`
 
 ```zaml
-# schema = autoCleanup:bool
+# assuming schema is autoCleanup:bool
 autoCleanup true
 
 #=> { "autoCleanup": bool }
@@ -119,7 +119,7 @@ autoCleanup true
 A `num` accepts a single numerical value.
 
 ```zaml
-# schema = port:num
+# assuming schema is port:num
 port 3000
 
 #=> { "port": 3000 }
@@ -130,7 +130,7 @@ port 3000
 A `str` is the default type of any unspecified schema key.
 
 ```zaml
-# schema = title OR title:str
+# assuming schema is title OR title:str
 title ~/home/my-proj
 
 #=> { "title": "~/home/my-proj" }
@@ -141,7 +141,7 @@ title ~/home/my-proj
 A `kv` is a set of key-value pairs. It requires a block.
 
 ```zaml
-# schema = redirects:kv
+# assuming schema is redirects:kv
 redirects {
   /contact       /contact-us
   /profile/:user /u/:user
@@ -157,7 +157,7 @@ Please note Zaml **is not** indentation sensitive.
 A block is a specified inner schema. It translates to a hash that only allows your specified keys.
 
 ```zaml
-# schema = project:{title,private:bool}
+# assuming schema is project:{title,private:bool}
 project {
   title My Sweet App
   private true
@@ -171,7 +171,7 @@ project {
 A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
 
 ```zaml
-# schema = tags:list
+# assuming schema is tags:list
 
 # Inline example
 tags library npm "with spaces" js
@@ -190,7 +190,7 @@ tags {
 You can also enhance your list by making a [block](#block) available to each `str`.
 
 ```zaml
-# schema = users:list{admin:bool}
+# assuming schema is users:list{admin:bool}
 users {
   andy
   beth {
@@ -221,7 +221,7 @@ NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
 If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a [block](#block).
 
 ```zaml
-# schema = when|list{include|multi}
+# assuming schema is when|list{include|multi}
 
 when development test {
   include lib/profiler.js
@@ -238,7 +238,7 @@ Note that a [block](#block) the only valid type when using the `|list` attribute
 Appending the `|multi` attribute to a key allows your users to specify it more than once.
 
 ```zaml
-# schema = project|multi:{title,type}
+# assuming schema is project|multi:{title,type}
 project {
   title A
 }
@@ -253,7 +253,7 @@ project {
 It will also guarantee your key is always present, even if the user does not provide any.
 
 ```zaml
-# schema = project|multi:{title,type}
+# assuming schema is project|multi:{title,type}
 
 # (intentionally left blank)
 
@@ -265,7 +265,7 @@ It will also guarantee your key is always present, even if the user does not pro
 A tuple captures two or more values for a given key. You can specify one with parenthesis:
 
 ```zaml
-# schema = redirect:(num,str,str)
+# assuming schema is redirect:(num,str,str)
 
 redirect 302 /old /new
 
@@ -275,7 +275,7 @@ redirect 302 /old /new
 Please note that tuples may only contain basic types (`str`, `num`, and `bool`). However, you're free to mix tuples with other features:
 
 ```zaml
-# schema = redirect|multi:(num,str,str){enableAt}
+# assuming schema is redirect|multi:(num,str,str){enableAt}
 
 redirect 301 /x /y
 
