@@ -239,7 +239,7 @@ export function parseZaml (source: string, schema: Schema, statements: Statement
       })
 
       if (s.block && ! t.blockSchema) {
-        // throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
+        throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
       }
       else if (s.block && t.blockSchema) {
         args.push(parseZaml(source, t.blockSchema, s.block, opts))

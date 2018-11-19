@@ -89,7 +89,19 @@ o.spec("Errors", function () {
     }
   })
 
-  o("tuple no block", function () {})
+  o("tuple no block", function () {
+    try {
+      parse(`
+        foo x y {
+          not valid
+        }
+      `, 'foo:(str,str)')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 2, 17, /block/i, /foo/)
+    }
+  })
 
   o("missing end bracket", function () {})
   o("failOnUndefinedVars when vars is not set", function () {})
