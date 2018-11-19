@@ -294,7 +294,7 @@ redirect 302 /old /new {
 
 The primary way you interact with Zaml is through its `parse` function. This is how you convert Zaml source to a JavaScript data structure.
 
-`port` takes two, maybe three arguments:
+`parse` takes two, maybe three arguments:
 
 1. The Zaml source code (as a string)
 2. A schema to parse with (as a string)
