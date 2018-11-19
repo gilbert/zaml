@@ -19,7 +19,7 @@
     "validation"
   ],
   "author": "https://github.com/gilbert",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "browserify": "^16.2.3",
     "ospec": "^3.0.1",
