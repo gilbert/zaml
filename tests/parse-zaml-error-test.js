@@ -120,7 +120,15 @@ o.spec("Errors", function () {
     }
   })
 
-  o("missing end bracket", function () {})
+  o("missing end bracket", function () {
+    try {
+      parse('oops {', { oops: { inner: 'str' } })
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 7, /missing end bracket/i)
+    }
+  })
+
   o("failOnUndefinedVars when vars is not set", function () {})
   o("accurate tuple boolean error", function () {})
 })

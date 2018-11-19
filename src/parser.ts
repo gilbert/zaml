@@ -38,7 +38,6 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
       if (! inBlock) {
         throw new ZamlError('syntax-error', pos, `Unexpected }`)
       }
-      pos.push(source)
       return results
     }
 
@@ -113,7 +112,17 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
       args: args,
       argsPos: [argsPosStart, argsPosEnd],
     }
-    if (hasBlock) s.block = lex(source, pos, true)
+    if (hasBlock) {
+      s.block = lex(source, pos, true)
+      if (pos.i === source.length) {
+        throw new ZamlError('syntax-error', pos, `Unexpected EOF: Missing end bracket '}'`)
+      }
+      if (source[pos.i] !== '}') {
+        throw new ZamlError('syntax-error', pos,
+          `Expected end bracket '}', got ${JSON.stringify(source[pos.i])} instead (shouldn't be possible?)`)
+      }
+      pos.newcol()
+    }
 
     results.push(s)
   }
