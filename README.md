@@ -192,11 +192,11 @@ You can also enhance your list by making a [block](#block) available to each `st
 ```zaml
 # schema = users:list{admin:bool}
 users {
-  andy@xx.com
-  beth@yy.com {
+  andy
+  beth {
     admin true
   }
-  carl@zz.com
+  carl
 }
 
 #=> { "users": [["andy"], ["beth", {admin: true}], ["carl"]] }
