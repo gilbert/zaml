@@ -9,7 +9,7 @@ o.spec("Regression tests", function () {
     o(result).deepEquals({ x: true })
   })
 
-  o("bool and newline", function () {
+  o("schema type name after bracket", function () {
     var result = parseSchema('task|multi:{name,meta:kv},title')
     o(result).deepEquals({
       "task|multi": {
