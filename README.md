@@ -21,7 +21,9 @@ or
 
     yarn add zaml
 
-or check out [the online editor](https://gilbert.github.io/zaml/editor.html)!
+or
+
+Check out [the online editor](https://gilbert.github.io/zaml/editor.html)!
 
 ## Table of Contents
 
@@ -108,7 +110,8 @@ title This is # not a comment
 A `bool` accepts `true` or `false`
 
 ```zaml
-# assuming schema is autoCleanup:bool
+# if your schema is autoCleanup:bool
+
 autoCleanup true
 
 #=> { "autoCleanup": bool }
@@ -119,7 +122,8 @@ autoCleanup true
 A `num` accepts a single numerical value.
 
 ```zaml
-# assuming schema is port:num
+# if your schema is port:num
+
 port 3000
 
 #=> { "port": 3000 }
@@ -130,7 +134,8 @@ port 3000
 A `str` is the default type of any unspecified schema key.
 
 ```zaml
-# assuming schema is title OR title:str
+# if your schema is title OR title:str
+
 title ~/home/my-proj
 
 #=> { "title": "~/home/my-proj" }
@@ -141,7 +146,8 @@ title ~/home/my-proj
 A `kv` is a set of key-value pairs. It requires a block.
 
 ```zaml
-# assuming schema is redirects:kv
+# if your schema is redirects:kv
+
 redirects {
   /contact       /contact-us
   /profile/:user /u/:user
@@ -157,7 +163,8 @@ Please note Zaml **is not** indentation sensitive.
 A block is a specified inner schema. It translates to a hash that only allows your specified keys.
 
 ```zaml
-# assuming schema is project:{title,private:bool}
+# if your schema is project:{title,private:bool}
+
 project {
   title My Sweet App
   private true
@@ -171,7 +178,7 @@ project {
 A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
 
 ```zaml
-# assuming schema is tags:list
+# if your schema is tags:list
 
 # Inline example
 tags library npm "with spaces" js
@@ -190,7 +197,8 @@ tags {
 You can also enhance your list by making a [block](#block) available to each `str`.
 
 ```zaml
-# assuming schema is users:list{admin:bool}
+# if your schema is users:list{admin:bool}
+
 users {
   andy
   beth {
@@ -221,7 +229,7 @@ NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
 If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a [block](#block).
 
 ```zaml
-# assuming schema is when|list{include|multi}
+# if your schema is when|list{include|multi}
 
 when development test {
   include lib/profiler.js
@@ -238,7 +246,8 @@ Note that a [block](#block) the only valid type when using the `|list` attribute
 Appending the `|multi` attribute to a key allows your users to specify it more than once.
 
 ```zaml
-# assuming schema is project|multi:{title,type}
+# if your schema is project|multi:{title,type}
+
 project {
   title A
 }
@@ -253,7 +262,7 @@ project {
 It will also guarantee your key is always present, even if the user does not provide any.
 
 ```zaml
-# assuming schema is project|multi:{title,type}
+# if your schema is project|multi:{title,type}
 
 # (intentionally left blank)
 
@@ -265,7 +274,7 @@ It will also guarantee your key is always present, even if the user does not pro
 A tuple captures two or more values for a given key. You can specify one with parenthesis:
 
 ```zaml
-# assuming schema is redirect:(num,str,str)
+# if your schema is redirect:(num,str,str)
 
 redirect 302 /old /new
 
@@ -275,7 +284,7 @@ redirect 302 /old /new
 Please note that tuples may only contain basic types (`str`, `num`, and `bool`). However, you're free to mix tuples with other features:
 
 ```zaml
-# assuming schema is redirect|multi:(num,str,str){enableAt}
+# if your schema is redirect|multi:(num,str,str){enableAt}
 
 redirect 301 /x /y
 
@@ -385,13 +394,21 @@ After lexing, the parser uses the schema to determine how to parse the `rest` an
 ## Roadmap
 
 - Allow inline `kv`
-- Enhanced `kv` type for arbitrarily-nested arbitrary data?
+- Allow blocks on `kv`, `num`, `bool`, `str`
+- New `json` type for arbitrarily-nested json-like data?
 - Multiline strings? `text` type?
 - Split `num` into `int` and `float`?
 - Pluggable validation?
 - Default values for tuple types?
 - Required fields?
 - Command line interface?
+
+Regarding the [online editor](https://gilbert.github.io/zaml/editor.html):
+
+- Linkable examples
+- URL-encoded content
+- `Get code` button
+- Fancy explanations of schema on hover
 
 ## Contributing
 
