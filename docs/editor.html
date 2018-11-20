@@ -82,8 +82,6 @@
 
   .Output {
     overflow: auto;
-    /*border-left: 1px solid #D0CECE;*/
-    /*border-top: 2px solid #D0CECE;*/
   }
 
   .flex { flex: 1; }
@@ -93,6 +91,10 @@
 
   .ace_editor{ background: #f8f7f7 !important; }
   .ace_gutter{ background: #F4F0F0 !important; }
+
+  .ace_type { color: #154fcb; }
+  .ace_configkey { color: #cb1515; }
+  .ace_kv_key { text-decoration: underline; }
 </style>
 
 <div id="app"></div>
@@ -101,6 +103,7 @@
 <script src="https://unpkg.com/mithril@2.0.0-rc.1"></script>
 <div id="js-editor"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+<script src="./ace-editor-modes.js"></script>
 <script src="./editor.js"></script>
 <script>
   m.mount(app, Editor)

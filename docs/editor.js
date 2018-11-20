@@ -60,12 +60,24 @@ devDependencies {
     source: examples[0].source,
     schemaOutput: '',
     sourceOutput: '',
+    updateSchema: function () {},
   }
 
   window.Editor = {
     oncreate(vnode) {
-      this.schemaEditor = ace.edit("schema-editor")
+      this.schemaEditor = ace.edit("schema-editor", { mode: 'ace/mode/zaml_schema' })
       this.sourceEditor = ace.edit("source-editor")
+
+      // Fancy dynamic syntax highlighting!
+      var ZamlMode = require("ace/mode/zaml").Mode
+      var dynamicMode = new ZamlMode()
+      this.sourceEditor.session.setMode(dynamicMode)
+
+      appState.updateSchema = (schema) => {
+        dynamicMode.$highlightRules.setSchema(cleanConfigKeys(schema))
+        this.sourceEditor.session.bgTokenizer.start(0)
+      }
+
 
       this.schemaEditor.session.gutterRenderer = {
         getWidth: ace_getWidth,
@@ -160,11 +172,13 @@ devDependencies {
       appState.schemaOutput = schemaErr.message
         .replace(/line ([0-9]+)/, (_,lineNo) => `line ${numberToLetters(Number(lineNo))}`)
       appState.sourceOutput = ''
+      appState.updateSchema({})
       m.redraw()
       return
     }
 
     appState.schemaOutput = JSON.stringify(schema, null, ' ')
+    appState.updateSchema(schema)
 
     try {
       var output = Zaml.parse(appState.source, schema)
@@ -180,6 +194,15 @@ devDependencies {
     }
   }
 
+  function cleanConfigKeys (schema) {
+    if (! isObj(schema)) return schema
+    var result = {}
+    for (var key in schema) {
+      result[key.split('|')[0]] = cleanConfigKeys(schema[key])
+    }
+    return result
+  }
+
   function numberToLetters (n) {
     var result = ''
     while (n > 0) {
@@ -193,5 +216,9 @@ devDependencies {
   function ace_getWidth(session, lastLineNumber, config) {
     // return (lastLineNumber.toString().length-1) * config.characterWidth
     return 2 * config.characterWidth
+  }
+
+  function isObj(x) {
+    return Object.prototype.toString.call(x) === '[object Object]';
   }
 })()
