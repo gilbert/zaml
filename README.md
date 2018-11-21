@@ -23,7 +23,7 @@ or
 
 or
 
-Check out [the online editor](https://gilbert.github.io/zaml/editor.html)!
+[Check out the online editor](https://gilbert.github.io/zaml/editor.html)!
 
 ## Table of Contents
 
@@ -117,6 +117,8 @@ autoCleanup true
 #=> { "autoCleanup": bool }
 ```
 
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAgrgFwPYGEA2MCAdugA7IBG22+IANONugE4QwppZ6EnkAEmFug4BfIA)
+
 ### num
 
 A `num` accepts a single numerical value.
@@ -129,6 +131,8 @@ port 3000
 #=> { "port": 3000 }
 ```
 
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwPYCcAuyB2ArnCADTgaFYQwrrY4AEAzAAzsA6+IAvkA)
+
 ### str
 
 A `str` is the default type of any unspecified schema key.
@@ -140,6 +144,8 @@ title ~/home/my-proj
 
 #=> { "title": "~/home/my-proj" }
 ```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAFwJZoDYxAGnAHsBXAJwj1UxxgAIA-AeiiLhibgE8BaABzJEAVgB0AdiAC+QA)
 
 ### kv
 
@@ -158,6 +164,8 @@ redirects {
 
 Please note Zaml **is not** indentation sensitive.
 
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgFzGQGsA3EAGnAHsBXNCGFdLXGAsAAmAB0A7TpwD0Ean3wICg6YJFiJBALS0w-WQAc01AGbYANjCHIVMNMNpGTafgF9+IG0A)
+
 ### block
 
 A block is a specified inner schema. It translates to a hash that only allows your specified keys.
@@ -172,6 +180,8 @@ project {
 
 #=> { "project": { "title": "My Sweet App", "private": true } }
 ```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuywBAlgQDYwA0mpAbggTMgEZZYUC+I14WAVwwQYKdNjyEABMAA6AOylSylGFICyATykBlAO4wYBKQEE0aBUrqNmyjAJgKuCkFyA)
 
 ### list
 
@@ -194,6 +204,8 @@ tags {
 #=> { "tags": ["library", "npm", "with spaces", "js"] }
 ```
 
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAFwQczMgNgSzDRABpwB7AVwCcIYUQBiAAgEkA7A9mZmADwRwADrhgAddiwzZmBAEbUE1AJ7N2QuMzEgA7vjRRmYIQjphtzAFbn2ElgCFc5CAGteA4aInSwzYBOZZfAUlZQC1DXC9AyMTM3DrCQBfCRAkoA)
+
 You can also enhance your list by making a [block](#block) available to each `str`.
 
 ```zaml
@@ -209,6 +221,8 @@ users {
 
 #=> { "users": [["andy"], ["beth", {admin: true}], ["carl"]] }
 ```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAVzDATmZAbASzABdgEATOAgO2QCMB7BvAXxABpwG0sIYV0mHAAJgAHWrDhCauQCeEqXRjEooxVOmUaw4ljQwNLDRARY8E49RAsgA)
 
 Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each result:
 
@@ -259,6 +273,8 @@ project {
 #=> { "project": [{ "title": "A" }, { "title": "B", "type": "personal" }] }
 ```
 
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuAPnAK4A2BAlssNQeTADQECeaMAviE+FqRggwU6bHkIACYAB0AdhIn1GEgIJzOczLnwEpchUpgSAQvsXsjHDGCyyE5dXJCcgA)
+
 It will also guarantee your key is always present, even if the user does not provide any.
 
 ```zaml
@@ -268,6 +284,8 @@ It will also guarantee your key is always present, even if the user does not pro
 
 #=> { "project": [] }
 ```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuAPnAK4A2BAlssNQeTADQECeaMAviE+FqRggwUIEJyA)
 
 ### tuple
 
@@ -280,6 +298,8 @@ redirect 302 /old /new
 
 #=> { "redirect": [302, "old", "new"] }
 ```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgF2QAoA7AVzgBox81raBKES8AezLQhhXS1xgIACAMwAGAEyCA9KwA2maSRgB3ADokQAXyA)
 
 Please note that tuples may only contain basic types (`str`, `num`, and `bool`). However, you're free to mix tuples with other features:
 
@@ -294,6 +314,8 @@ redirect 302 /old /new {
 
 #=> { "redirect": [[301, "x", "y"], [302, "/old", "/new", { "enableAt": "2020-10-10" }]] }
 ```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgFwB84BXAG322QAoA7EuAGjHzWdYEpgZaEAjMjACC+AL4hG4APYk0EGCnRZcMAgAIAzAAYAjGoD0ADwMBPADq0LGHHnyatAJgNSymA7RgB3NcAtq1PPyCImoOjloAtDqR0RaiFiCiQA)
 
 ## JavaScript API
 

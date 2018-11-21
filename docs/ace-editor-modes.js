@@ -108,12 +108,15 @@
             regex: "([^ \n\r]+)",
             onMatch: function (word, state) {
               var currentSchema = blockKeys.reduce((s,k) => s && s[k], schema)
-              if (currentSchema[word]) {
-                potentialBlockKey = word
-                return 'configkey'
+              if (! currentSchema) {
+                return 'text'
               }
               else if (currentSchema === 'kv') {
                 return 'kv_key'
+              }
+              else if (currentSchema[word]) {
+                potentialBlockKey = word
+                return 'configkey'
               }
               else {
                 potentialBlockKey = null

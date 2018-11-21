@@ -29,7 +29,7 @@ task {
     },
     {
       id: 'package-json',
-      name: 'Package.json example',
+      name: 'package.json example',
       schema:
 `name, version, description,
 main, author, license,
@@ -55,13 +55,32 @@ devDependencies {
     },
   ]
 
+  var urlState = (function () {
+    var hash = window.location.hash.substring(1) // Remove leading #
+    var defaultContent = examples[0]
+
+    if (hash.match(/^s=/)) {
+      var decoded = LZString.decompressFromEncodedURIComponent(hash.replace(/^s=/, ''))
+      try {
+        return JSON.parse(decoded) || defaultContent
+      }
+      catch(err) {
+        console.warn("Could not decode url state:", err, decoded)
+        return defaultContent
+      }
+    }
+    return examples.find(e => e.id === hash) || defaultContent
+  })()
+
   var appState = {
-    schema: examples[0].schema,
-    source: examples[0].source,
+    schema: urlState.schema,
+    source: urlState.source,
     schemaOutput: '',
     sourceOutput: '',
     updateSchema: function () {},
+    lastSelectedExample: urlState.id || null,
   }
+  var silentChange = false
 
   window.Editor = {
     oncreate(vnode) {
@@ -77,6 +96,12 @@ devDependencies {
         dynamicMode.$highlightRules.setSchema(cleanConfigKeys(schema))
         this.sourceEditor.session.bgTokenizer.start(0)
       }
+
+      // Remove annoying shortcuts
+      this.schemaEditor.commands.removeCommand('gotoline')
+      this.sourceEditor.commands.removeCommand('gotoline')
+      this.schemaEditor.commands.removeCommand('jumptomatching')
+      this.sourceEditor.commands.removeCommand('jumptomatching')
 
 
       this.schemaEditor.session.gutterRenderer = {
@@ -94,10 +119,18 @@ devDependencies {
 
       this.schemaEditor.session.on('change', () => {
         appState.schema = this.schemaEditor.getValue()
+        if (! silentChange) {
+          appState.lastSelectedExample = null
+        }
+        saveAppState()
         compile()
       })
       this.sourceEditor.session.on('change', () => {
         appState.source = this.sourceEditor.getValue()
+        if (! silentChange) {
+          appState.lastSelectedExample = null
+        }
+        saveAppState()
         compile()
       })
 
@@ -112,16 +145,32 @@ devDependencies {
           ),
           m('select', {
             style: 'margin-top: 0.8rem',
+            value: appState.lastSelectedExample,
             onchange: (e) => {
+              if (appState.lastSelectedExample === null && ! confirm("Discard your changes?")) {
+                e.preventDefault()
+                return
+              }
+              if (e.target.value === 'null') {
+                return
+              }
               var id = e.target.value
               var ex = examples.find(ex => ex.id === id)
+              appState.lastSelectedExample = id
+
+              silentChange = true
               this.schemaEditor.setValue(ex.schema, -1)
               this.sourceEditor.setValue(ex.source, -1)
+              silentChange = false
+              window.history.replaceState(null, document.title, '#'+id)
               compile(true)
             }
-          }, examples.map(ex =>
-            m('option', { value: ex.id }, ex.name)
-          )),
+          },
+            m('option[value=null]', "-- Select an Example --"),
+            examples.map(ex =>
+              m('option', { value: ex.id }, ex.name)
+            )
+          ),
           m('.flex'),
           m('a.github-text[href=https://github.com/gilbert/zaml]', "Source "),
           m('a.github-icon.text-right[href=https://github.com/gilbert/zaml]',
@@ -148,6 +197,30 @@ devDependencies {
         ),
       )
     }
+  }
+
+  function saveAppState () {
+    window.history.replaceState(null, document.title, `#s=${serializeAppState()}`)
+  }
+
+  function serializeAppState () {
+    return window.LZString.compressToEncodedURIComponent(
+      JSON.stringify({ schema: appState.schema, source: appState.source })
+    )
+  }
+
+  function clean(state) {
+    const clean = Object.keys(defaults()).reduce((acc, x) =>
+      (x in state && state[x] !== defaults[x] && (acc[x] = state[x]), acc)
+    , {})
+
+    if (state.files && state.files.length)
+      clean.files = pluck(state.files, ['name', 'content', 'compiler', 'selections'])
+
+    if (state.links)
+      clean.links = pluck(state.links, ['name', 'url', 'type', 'patches', 'selections'])
+
+    return clean
   }
 
   var updateTimeout = null
