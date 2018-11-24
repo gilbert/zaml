@@ -36,7 +36,7 @@ or
 
 ## Introduction
 
-Zaml's syntax is inspired by [NGINX's conf format](https://nginx.org/en/docs/beginners_guide.html#conf_structure). Clean, effective, and not obsessed with your shift key:
+Zaml's syntax is clean, effective, and not obsessed with your shift key:
 
 ```js
 import {parse} from 'zaml'
