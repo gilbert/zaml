@@ -107,7 +107,19 @@
             token: "identifier",
             regex: "([^ \n\r]+)",
             onMatch: function (word, state) {
-              var currentSchema = blockKeys.reduce((s,k) => s && s[k], schema)
+              var currentSchema = blockKeys.reduce((s,k) => {
+                console.log("Checking", k, s)
+                if (! s) return s
+                var ss = s[k]
+                if (Array.isArray(ss)) {
+                  ss = ss[ss.length-1]
+                  return isObj(ss) && ss
+                }
+                else {
+                  return s[k]
+                }
+              }, schema)
+
               if (! currentSchema) {
                 return 'text'
               }
@@ -134,4 +146,8 @@
 
     exports.ZamlHighlightRules = ZamlHighlightRules
   })
+
+  function isObj (x) {
+    return Object.prototype.toString.call(x) === '[object Object]';
+  }
 })()
