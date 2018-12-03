@@ -166,9 +166,9 @@ Please note Zaml **is not** indentation sensitive.
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgFzGQGsA3EAGnAHsBXNCGFdLXGAsAAmAB0A7TpwD0Ean3wICg6YJFiJBALS0w-WQAc01AGbYANjCHIVMNMNpGTafgF9+IG0A)
 
-### block
+### hash block
 
-A block is a specified inner schema. It translates to a hash that only allows your specified keys.
+A `{}` block is a specified inner schema. It translates to a hash that only allows your specified keys.
 
 ```zaml
 # if your schema is project:{title,private:bool}
@@ -182,6 +182,40 @@ project {
 ```
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuywBAlgQDYwA0mpAbggTMgEZZYUC+I14WAVwwQYKdNjyEABMAA6AOylSylGFICyATykBlAO4wYBKQEE0aBUrqNmyjAJgKuCkFyA)
+
+### array block
+
+NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
+
+A `[]` block is an array of items from a specified schema. It translates to an array of key-value tuples.
+
+```zaml
+# if your schema is sidebar:[header,link:(str,str)]
+sidebar {
+  header Site
+  link Home /
+  link About /about
+
+  header Account
+  link Settings /account/settings
+}
+#=> { "sidebar": [
+#       ["header", "Site"], ["link", ["Home", "/"]], ["link", ["About", "/about"]],
+#       ["header", "Account"], ["link", ["Settings", "/account/settings"]]
+#     ] }
+```
+
+Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each item:
+
+```js
+var result = parse(source, schema)
+for (let [type, value] of result.sidebar) {
+  //
+  // `type` will be "header" or "link",
+  //  whereas `value` will be a string (header) or array (link).
+  //
+}
+```
 
 ### list
 
@@ -206,7 +240,7 @@ tags {
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAFwQczMgNgSzDRABpwB7AVwCcIYUQBiAAgEkA7A9mZmADwRwADrhgAddiwzZmBAEbUE1AJ7N2QuMzEgA7vjRRmYIQjphtzAFbn2ElgCFc5CAGteA4aInSwzYBOZZfAUlZQC1DXC9AyMTM3DrCQBfCRAkoA)
 
-You can also enhance your list by making a [block](#block) available to each `str`.
+You can also enhance your list by making a block available to each `str`.
 
 ```zaml
 # if your schema is users:list{admin:bool}
@@ -224,7 +258,7 @@ users {
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAVzDATmZAbASzABdgEATOAgO2QCMB7BvAXxABpwG0sIYV0mHAAJgAHWrDhCauQCeEqXRjEooxVOmUaw4ljQwNLDRARY8E49RAsgA)
 
-Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each result:
+Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each list item:
 
 ```js
 var result = parse(source, schema)
@@ -240,7 +274,7 @@ for (let [user, options] of result.users) {
 
 NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
 
-If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a [block](#block).
+If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a block.
 
 ```zaml
 # if your schema is when|list{include|multi}
@@ -253,7 +287,7 @@ when development test {
 #=> { "when": [["development", "test"], { include: ["lib/profiler.js", "linter.js"] }] }
 ```
 
-Note that a [block](#block) the only valid type when using the `|list` attribute.
+Note that a block is the only valid type when using the `|list` attribute.
 
 ### key|multi
 
