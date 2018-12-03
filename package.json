@@ -1,6 +1,6 @@
 {
   "name": "zaml",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "description": "Fast, type-checked, zero-dependency configuration.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,6 +19,7 @@
     "validation"
   ],
   "author": "https://github.com/gilbert",
+  "repository": "github:gilbert/zaml",
   "license": "MIT",
   "devDependencies": {
     "browserify": "^16.2.3",
