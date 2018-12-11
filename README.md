@@ -183,40 +183,6 @@ project {
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuywBAlgQDYwA0mpAbggTMgEZZYUC+I14WAVwwQYKdNjyEABMAA6AOylSylGFICyATykBlAO4wYBKQEE0aBUrqNmyjAJgKuCkFyA)
 
-### array block
-
-NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
-
-A `[]` block is an array of items from a specified schema. It translates to an array of key-value tuples.
-
-```zaml
-# if your schema is sidebar:[header,link:(str,str)]
-sidebar {
-  header Site
-  link Home /
-  link About /about
-
-  header Account
-  link Settings /account/settings
-}
-#=> { "sidebar": [
-#       ["header", "Site"], ["link", ["Home", "/"]], ["link", ["About", "/about"]],
-#       ["header", "Account"], ["link", ["Settings", "/account/settings"]]
-#     ] }
-```
-
-Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each item:
-
-```js
-var result = parse(source, schema)
-for (let [type, value] of result.sidebar) {
-  //
-  // `type` will be "header" or "link",
-  //  whereas `value` will be a string (header) or array (link).
-  //
-}
-```
-
 ### list
 
 A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
@@ -269,25 +235,6 @@ for (let [user, options] of result.users) {
   //
 }
 ```
-
-### key|list
-
-NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
-
-If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a block.
-
-```zaml
-# if your schema is when|list{include|multi}
-
-when development test {
-  include lib/profiler.js
-  include linter.js
-}
-
-#=> { "when": [["development", "test"], { include: ["lib/profiler.js", "linter.js"] }] }
-```
-
-Note that a block is the only valid type when using the `|list` attribute.
 
 ### key|multi
 
@@ -350,6 +297,61 @@ redirect 302 /old /new {
 ```
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgFwB84BXAG322QAoA7EuAGjHzWdYEpgZaEAjMjACC+AL4hG4APYk0EGCnRZcMAgAIAzAAYAjGoD0ADwMBPADq0LGHHnyatAJgNSymA7RgB3NcAtq1PPyCImoOjloAtDqR0RaiFiCiQA)
+
+### array block
+
+NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
+
+A `[]` block is an array of items from a specified schema. It translates to an array of key-value tuples.
+
+```zaml
+# if your schema is sidebar:[header,link:(str,str)]
+
+sidebar {
+  header Site
+  link Home /
+  link About /about
+
+  header Account
+  link Settings /account/settings
+}
+
+#=> { "sidebar": [
+#       ["header", "Site"], ["link", ["Home", "/"]], ["link", ["About", "/about"]],
+#       ["header", "Account"], ["link", ["Settings", "/account/settings"]]
+#     ] }
+```
+
+Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each item:
+
+```js
+var result = parse(source, schema)
+for (let [type, value] of result.sidebar) {
+  //
+  // `type` will be "header" or "link",
+  //  whereas `value` will be a string (header) or array (link).
+  //
+}
+```
+
+### key|list
+
+NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
+
+If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a block.
+
+```zaml
+# if your schema is when|list{include|multi}
+
+when development test {
+  include lib/profiler.js
+  include linter.js
+}
+
+#=> { "when": [["development", "test"], { include: ["lib/profiler.js", "linter.js"] }] }
+```
+
+Note that a block is the only valid type when using the `|list` attribute.
 
 ## JavaScript API
 
