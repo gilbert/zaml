@@ -21,6 +21,12 @@ o.spec("Schema parsing", function () {
     })
   })
 
+  o("empty block", function () {
+    o(p('user:{}')).deepEquals({
+      user: {}
+    })
+  })
+
   o("list block", function () {
     o(p('users:list{admin:bool}')).deepEquals({
       users: ['list', { admin: 'bool' }]

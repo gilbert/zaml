@@ -90,6 +90,11 @@ export function parseSchema (source: string) {
 
 function parseDefs (source: string, pos: Pos, inBlock=false) {
   var result: any = {}
+  var start = pos.copy()
+
+  if (inBlock) {
+    pos.newcol()
+  }
 
   while (pos.skipWhitespace(source)) {}
 
@@ -98,8 +103,10 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
 
     while (pos.skipWhitespace(source)) {}
 
-    var type = readType(source, pos)
-    result[name] = type
+    if (name !== '') {
+      var type = readType(source, pos)
+      result[name] = type
+    }
 
     while (pos.skipWhitespace(source)) {}
 
@@ -119,6 +126,11 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
       throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
     }
   }
+
+  if (pos.i === source.length && inBlock) {
+    throw new ZamlError('syntax-error', start, `Missing end bracket "}"`)
+  }
+
   return result
 }
 
@@ -159,7 +171,7 @@ function readType (source: string, pos: Pos) {
     let c2 = source[pos.i]
 
     if (c2 === '{') {
-      return parseDefs(source, pos.newcol(), true)
+      return parseDefs(source, pos, true)
     }
 
     if (c2 === '(') {
@@ -178,7 +190,7 @@ function readType (source: string, pos: Pos) {
       while (pos.skipWhitespace(source)) {}
 
       if (source[pos.i] === '{') {
-        let block = parseDefs(source, pos.newcol(), true)
+        let block = parseDefs(source, pos, true)
         types.push(block)
       }
       return types
@@ -200,7 +212,7 @@ function readType (source: string, pos: Pos) {
       if (typename !== 'list') {
         throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
       }
-      let block = parseDefs(source, pos.newcol(), true)
+      let block = parseDefs(source, pos, true)
       return [typename, block]
     }
     else if (c3 === ',' || c3 === '}' || pos.i === source.length) {

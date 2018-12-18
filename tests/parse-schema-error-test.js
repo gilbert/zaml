@@ -97,4 +97,14 @@ o.spec("Schema Parse Errors", function () {
       checkError(err, 'syntax-error', 1, 9, /missing/i, /"\)"/i,)
     }
   })
+
+  o("missing end bracket", function () {
+    try {
+      p(`user:{\n  `)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 6, /missing/i, /"\}"/i,)
+    }
+  })
 })
