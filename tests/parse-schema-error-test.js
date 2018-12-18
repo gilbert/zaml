@@ -24,13 +24,23 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
-  o("block brackets without a colon", function () {
+  o("block bracket without a colon", function () {
     try {
       p(`project{name}`)
       o("Should not be successful").equals(false)
     }
     catch (err) {
       checkError(err, 'syntax-error', 1, 8, /unexpected "{"/i, /forget/i, /colon/i)
+    }
+  })
+
+  o("array bracket without a colon", function () {
+    try {
+      p(`project[name]`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 8, /unexpected "\["/i, /forget/i, /colon/i)
     }
   })
 

@@ -21,6 +21,12 @@ o.spec("Schema parsing", function () {
     })
   })
 
+  o("array block", function () {
+    o(p('user:[name,score:num]')).deepEquals({
+      'user': { '@type': 'array', schema: { name: 'str', score: 'num' } }
+    })
+  })
+
   o("empty block", function () {
     o(p('user:{}')).deepEquals({
       user: {}

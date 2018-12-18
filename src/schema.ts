@@ -78,7 +78,7 @@ export function createSchema (definitions: any) {
 
 export function parseSchema (source: string) {
   try {
-    return parseDefs(source, new Pos())
+    return parseDefs(source, new Pos(), false)
   }
   catch (e) {
     if (e instanceof ZamlError) {
@@ -88,7 +88,9 @@ export function parseSchema (source: string) {
   }
 }
 
-function parseDefs (source: string, pos: Pos, inBlock=false) {
+type BlockType = '}' | ']' | false
+
+function parseDefs (source: string, pos: Pos, inBlock:BlockType) {
   var result: any = {}
   var start = pos.copy()
 
@@ -110,20 +112,22 @@ function parseDefs (source: string, pos: Pos, inBlock=false) {
 
     while (pos.skipWhitespace(source)) {}
 
-    if (source[pos.i] === '}') {
-      if (! inBlock) {
-        throw new ZamlError('syntax-error', pos, unexp('}'))
+    var c = source[pos.i]
+
+    if (c === '}' || c === ']') {
+      if (! inBlock || inBlock !== c) {
+        throw new ZamlError('syntax-error', pos, unexp(c))
       }
       pos.newcol()
       while (pos.skipWhitespace(source)) {}
       return result
     }
-    else if (source[pos.i] === ',') {
+    else if (c === ',') {
       pos.newcol()
       while (pos.skipWhitespace(source)) {}
     }
     else if (pos.i < source.length) {
-      throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
+      throw new ZamlError('syntax-error', pos, unexp(c))
     }
   }
 
@@ -140,6 +144,8 @@ function readName (source: string, pos: Pos): string {
     pos.i < source.length &&
     source[pos.i] !== '{' &&
     source[pos.i] !== '}' &&
+    source[pos.i] !== '[' &&
+    source[pos.i] !== ']' &&
     source[pos.i] !== '(' &&
     source[pos.i] !== ')' &&
     source[pos.i] !== ',' &&
@@ -160,7 +166,7 @@ function readType (source: string, pos: Pos) {
     return 'str'
   }
 
-  if (c === '{' || c === '(') {
+  if (c === '{' || c === '[' || c === '(') {
     throw new ZamlError('syntax-error', pos, unexp(c, '. Did you forget a colon?'))
   }
 
@@ -171,7 +177,11 @@ function readType (source: string, pos: Pos) {
     let c2 = source[pos.i]
 
     if (c2 === '{') {
-      return parseDefs(source, pos, true)
+      return parseDefs(source, pos, '}')
+    }
+    if (c2 === '[') {
+      var schema = parseDefs(source, pos, ']')
+      return { '@type': 'array', schema }
     }
 
     if (c2 === '(') {
@@ -190,7 +200,7 @@ function readType (source: string, pos: Pos) {
       while (pos.skipWhitespace(source)) {}
 
       if (source[pos.i] === '{') {
-        let block = parseDefs(source, pos, true)
+        let block = parseDefs(source, pos, '}')
         types.push(block)
       }
       return types
@@ -212,10 +222,10 @@ function readType (source: string, pos: Pos) {
       if (typename !== 'list') {
         throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
       }
-      let block = parseDefs(source, pos, true)
+      let block = parseDefs(source, pos, '}')
       return [typename, block]
     }
-    else if (c3 === ',' || c3 === '}' || pos.i === source.length) {
+    else if (c3 === ',' || c3 === '}' || c3 === ']' || pos.i === source.length) {
       return typename
     }
 
