@@ -238,7 +238,7 @@ for (let [user, options] of result.users) {
 
 ### key|multi
 
-Appending the `|multi` attribute to a key allows your users to specify it more than once.
+Appending the `|multi` attribute to a key allows your users to specify it more than once. This is only affects [hash blocks](#hash-blocks).
 
 ```zaml
 # if your schema is {project|multi:{title,type}}
@@ -256,7 +256,7 @@ project {
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMADgJwPYCsYQAuAPnAK4A2hAlssDYRTADSECe6MAvlyM+NjKYIMFCCx4ChAATAAOgDtp0hk2kBBRV0UT8RWYuWqY0gEKGVHE50xhsChBS2KQXIA)
 
-It will also guarantee your key is always present, even if the user does not provide any.
+`|multi` will also ensure your key is always present, even if the user does not provide any.
 
 ```zaml
 # if your schema is {project|multi:{title,type}}
@@ -299,8 +299,6 @@ redirect 302 /old /new {
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAJxgEwJbYQAuAPnAK4A2ReyAFAHblwA0YRmbHAlMDAwgBGlGAEEiAX3QSQLcAHtymCDBQhs+QkXQBmAAwBGdAHoAHiYCeAHQY2NBGMV16ATCfmUcJhjADu6YBt0dH4hEXF0F1c9AFoDWPibCRsQCSA)
 
 ### array block
-
-NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
 
 A `[]` block is an array of items from a specified schema. It translates to an array of key-value tuples.
 
