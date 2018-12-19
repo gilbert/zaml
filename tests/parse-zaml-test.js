@@ -7,12 +7,26 @@ o("basic types", function () {
     y hello
     z one two
     b true
-  `, 'x:num,y,z,b:bool')
+  `, '{x:num,y,z,b:bool}')
 
   o(result.x).equals(10)
   o(result.y).equals('hello')
   o(result.z).equals('one two')
   o(result.b).equals(true)
+})
+
+o("array block", function () {
+  var result = parse(`
+    one 10
+    two 20
+    one 11
+  `, '[one:num,two:str]')
+
+  o(result).deepEquals([
+    ['one', 10],
+    ['two', '20'],
+    ['one', 11],
+  ])
 })
 
 o("kv", function () {
@@ -23,7 +37,7 @@ o("kv", function () {
         k2 v2
       }
     }
-  `, 'one:{two:kv}')
+  `, '{one:{two:kv}}')
 
   o(result).deepEquals({
     one: {
@@ -41,8 +55,11 @@ o("list", function () {
     }
     inline x y z
   `, {
-    items: 'list',
-    inline: 'list',
+    type: 'hash',
+    schema: {
+      items: { type: 'list' },
+      inline: { type: 'list' },
+    }
   })
 
   o(result).deepEquals({
@@ -61,7 +78,16 @@ o("list block", function () {
       carl
     }
   `, {
-    users: ['list', { admin: 'bool' }],
+    type: 'hash',
+    schema: {
+      users: {
+        type: 'list',
+        block: {
+          type: 'hash',
+          schema: { admin: {type: 'bool'} }
+        }
+      },
+    }
   })
 
   o(result).deepEquals({
@@ -79,7 +105,7 @@ o("multi", function () {
       tag hello there
       tag cool
     }
-  `, 'project|multi:{title,tag|multi}')
+  `, '{project|multi:{title,tag|multi}}')
 
   o(result).deepEquals({
     project: [
@@ -92,9 +118,7 @@ o("multi", function () {
 o("tuple", function () {
   var result = parse(`
     redirect 301 /old /new
-  `, {
-    redirect: ['num', 'str', 'str']
-  })
+  `, '{redirect:(num,str,str)}')
 
   o(result).deepEquals({
     redirect: [301, '/old', '/new']
@@ -106,12 +130,10 @@ o("tuple block", function () {
     redirect 301 /old /new {
       enabled false
     }
-  `, {
-    redirect: ['num', 'str', 'str', { enabled: 'bool' }]
-  })
+  `, '{redirect:(num,str,str){enabled:bool}}')
 
   o(result).deepEquals({
-    redirect: [301, '/old', '/new', { enabled: false }]
+    redirect: [[301, '/old', '/new'], { enabled: false }]
   })
 })
 
@@ -126,7 +148,7 @@ o.spec("ParseOptions", function () {
         eee $E
         $F $X
       }
-    `, 'num:num,str,lst:list,hsh:kv', {
+    `, '{num:num,str,lst:list,hsh:kv}', {
       vars: { X: '20', A: 'a', B: 'b', C: 'c', D: 'd', E: 'e', F: 'f' }
     })
 
@@ -142,9 +164,7 @@ o.spec("ParseOptions", function () {
     try {
       var result = parse(`
         x $A $B
-      `, {
-        x: 'str'
-      }, {
+      `, '{x}', {
         vars: { A: 'a' },
         failOnUndefinedVars: true,
       })
@@ -167,9 +187,7 @@ o.spec("Syntactic features", function () {
   o("single-line string", function () {
     var result = parse(`
       items alice "big bob" robot
-    `, {
-      items: 'list',
-    })
+    `, '{items:list}')
 
     o(result).deepEquals({ items: ['alice', 'big bob', 'robot'] })
   })
@@ -183,7 +201,7 @@ o.spec("Syntactic features", function () {
         #d
         e
       }
-    `, 'items:list')
+    `, '{items:list}')
 
     o(result).deepEquals({ items: ['a','c','e'] })
   })

@@ -2,15 +2,13 @@ var o = require("ospec")
 var {checkError} = require('./helpers')
 var {parse} = require('../dist/index.js')
 
-o.spec("Errors", function () {
+o.spec("Parse Errors", function () {
   o("duplicate keys", function () {
     try {
       parse(`
         title x
         title x
-      `, {
-        title: 'str'
-      })
+      `, '{title}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
@@ -22,9 +20,7 @@ o.spec("Errors", function () {
     try {
       parse(`
         admin x
-      `, {
-        admin: 'bool'
-      })
+      `, '{admin:bool}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
@@ -34,7 +30,7 @@ o.spec("Errors", function () {
 
   o("NaN", function () {
     try {
-      parse(`count nope`, { count: 'num' })
+      parse(`count nope`, '{count:num}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
@@ -42,7 +38,7 @@ o.spec("Errors", function () {
     }
   })
 
-  o("lists no block", function () {
+  o("list no block", function () {
     try {
       parse(`
         tags {
@@ -51,9 +47,7 @@ o.spec("Errors", function () {
             bar true
           }
         }
-      `, {
-        tags: 'list'
-      })
+      `, '{tags:list}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
@@ -66,7 +60,7 @@ o.spec("Errors", function () {
       parse(`
         foo {
           title I don't accept a block
-        }`, 'foo')
+        }`, '{foo}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
@@ -76,7 +70,7 @@ o.spec("Errors", function () {
       parse(`
         foo {
           title I don't accept a block
-        }`, 'foo:num')
+        }`, '{foo:num}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
@@ -86,11 +80,11 @@ o.spec("Errors", function () {
       parse(`
         foo {
           title I don't accept a block
-        }`, 'foo:bool')
+        }`, '{foo:bool}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'user-error', 2, 13, /block/i, /foo/)
+      checkError(err, 'user-error', 2, 13, /foo/i, /requires a value/)
     }
   })
 
@@ -100,7 +94,7 @@ o.spec("Errors", function () {
         foo x y {
           not valid
         }
-      `, 'foo:(str,str)')
+      `, '{foo:(str,str)}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
@@ -112,7 +106,7 @@ o.spec("Errors", function () {
     try {
       parse(`
         foo x y
-      `, 'foo:(str,str,str)')
+      `, '{foo:(str,str,str)}')
       o("Should not be successful").equals(false)
     }
     catch (err) {

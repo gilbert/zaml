@@ -7,78 +7,24 @@ import {
   Pos,
   Schema,
   ZamlError,
-  isObj,
   validTypes,
-  basicTypes,
+  basicTypeFromName,
   whitespace,
-  reservedOps,
 } from './util'
 
-export function createSchema (definitions: any) {
-  definitions = {...definitions}
-
-  var schema: Schema = {}
-
-  for (var key in definitions) {
-    if (reservedOps.test(key[0])) {
-      throw new ZamlError('author-error', null, `The key (${key}) is invalid: ${key[0]} is a reserved word.`)
-    }
-
-    // Extract key attributes
-    let [configName, ...attrs] = key.split('|')
-    let multi = attrs.indexOf('multi') >= 0
-
-    // Strip attrs from key so source code matches up
-    if (attrs.length) {
-      definitions[configName] = definitions[key]
-      delete definitions[key]
-      key = configName
-    }
-
-    let t = definitions[configName]
-
-    if (Array.isArray(t) && t[0] === 'list' && isObj(t[1])) {
-      schema[key] = { name: t[0], blockSchema: createSchema(t[1]), multi }
-    }
-    else if (Array.isArray(t)) {
-      let hasBlock = isObj(t[t.length-1])
-      let end = hasBlock ? t.length-2 : t.length-1
-
-      for (let i=0; i < end; i++) {
-        let t2 = t[i]
-        if (basicTypes.indexOf(t2) === -1) {
-          throw new ZamlError('author-error', null, `Invalid tuple type: ${JSON.stringify(t)}`)
-        }
-      }
-      schema[key] = hasBlock
-        ? { name: 'tuple', types: t, blockSchema: createSchema(t[t.length-1]), multi }
-        : { name: 'tuple', types: t, multi }
-    }
-    else if (t === 'num' || t === 'str') {
-      schema[key] = { name: t, multi }
-    }
-    else if (t === 'kv') {
-      schema[key] = { name: t, multi }
-    }
-    else if (t === 'list') {
-      schema[key] = { name: t, multi }
-    }
-    else if (t === 'bool') {
-      schema[key] = { name: t, multi }
-    }
-    else if (isObj(t)) {
-      schema[key] = { name: 'block', blockSchema: createSchema(t), multi }
-    }
-    else {
-      throw new ZamlError('author-error', null, `Invalid schema type: ${JSON.stringify(t)}`)
-    }
-  }
-  return schema
-}
-
-export function parseSchema (source: string) {
+export function parseSchema (source: string): Schema.Block {
   try {
-    return parseDefs(source, new Pos(), false)
+    var pos = new Pos()
+    while (pos.skipWhitespace(source)) {}
+
+    var startChar = source[pos.i]
+
+    if (startChar !== '{' && startChar !== '[') {
+      throw new ZamlError('syntax-error', pos,
+        `Your schema must begin with a hash block "{" or an array block "["`)
+    }
+
+    return parseBlock(source, pos)
   }
   catch (e) {
     if (e instanceof ZamlError) {
@@ -88,26 +34,33 @@ export function parseSchema (source: string) {
   }
 }
 
-type BlockType = '}' | ']' | false
+function parseBlock (source: string, pos: Pos): Schema.Block {
+  const start = pos.copy()
+  const blockChar = source[pos.i]
 
-function parseDefs (source: string, pos: Pos, inBlock:BlockType) {
-  var result: any = {}
-  var start = pos.copy()
-
-  if (inBlock) {
-    pos.newcol()
+  if (blockChar !== '{' && blockChar !== '[') {
+    throw new ZamlError('syntax-error', pos, unexp(blockChar, "This shouldn't happen."))
   }
+
+  const endBlockChar = blockChar === '{' ? '}' : ']'
+
+  const result: Schema.Block = blockChar === '{'
+    ? { type: 'hash', schema: {} }
+    : { type: 'array', schema: {} }
+
+  pos.newcol()
 
   while (pos.skipWhitespace(source)) {}
 
   while (pos.i < source.length) {
-    var name = readName(source, pos)
+    var key = readKey(source, pos)
 
     while (pos.skipWhitespace(source)) {}
 
-    if (name !== '') {
+    if (key.name !== '') {
       var type = readType(source, pos)
-      result[name] = type
+      if (key.multi) type.multi = true
+      result.schema[key.name] = type
     }
 
     while (pos.skipWhitespace(source)) {}
@@ -115,7 +68,7 @@ function parseDefs (source: string, pos: Pos, inBlock:BlockType) {
     var c = source[pos.i]
 
     if (c === '}' || c === ']') {
-      if (! inBlock || inBlock !== c) {
+      if (c !== endBlockChar) {
         throw new ZamlError('syntax-error', pos, unexp(c))
       }
       pos.newcol()
@@ -131,14 +84,14 @@ function parseDefs (source: string, pos: Pos, inBlock:BlockType) {
     }
   }
 
-  if (pos.i === source.length && inBlock) {
-    throw new ZamlError('syntax-error', start, `Missing end bracket "}"`)
+  if (pos.i === source.length) {
+    throw new ZamlError('syntax-error', start, `Missing end bracket "${endBlockChar}"`)
   }
 
   return result
 }
 
-function readName (source: string, pos: Pos): string {
+function readKey (source: string, pos: Pos) {
   var start = pos.i
   while (
     pos.i < source.length &&
@@ -154,16 +107,22 @@ function readName (source: string, pos: Pos): string {
   ) {
     pos.newcol()
   }
-  return source.substring(start, pos.i)
+  var key = source.substring(start, pos.i)
+
+  let [name, ...attrs] = key.split('|')
+  var result: {name:string, multi?:true} = { name }
+
+  if (attrs.indexOf('multi') >= 0) result.multi = true
+  return result
 }
 
-function readType (source: string, pos: Pos) {
+function readType (source: string, pos: Pos): Schema.t {
   let c = source[pos.i]
 
-  if (pos.i >= source.length || c === '}' || c === ',') {
+  if (pos.i >= source.length || c === '}' || c === ']' || c === ',') {
     // At this point we've reached the end without
     // a specified type. Return the default.
-    return 'str'
+    return { type: 'str' }
   }
 
   if (c === '{' || c === '[' || c === '(') {
@@ -176,12 +135,8 @@ function readType (source: string, pos: Pos) {
 
     let c2 = source[pos.i]
 
-    if (c2 === '{') {
-      return parseDefs(source, pos, '}')
-    }
-    if (c2 === '[') {
-      var schema = parseDefs(source, pos, ']')
-      return { '@type': 'array', schema }
+    if (c2 === '{' || c2 === '[') {
+      return parseBlock(source, pos)
     }
 
     if (c2 === '(') {
@@ -200,14 +155,16 @@ function readType (source: string, pos: Pos) {
       while (pos.skipWhitespace(source)) {}
 
       if (source[pos.i] === '{') {
-        let block = parseDefs(source, pos, '}')
-        types.push(block)
+        let block = parseBlock(source, pos)
+        return { type: 'tuple', schema: types, block }
       }
-      return types
+      else {
+        return { type: 'tuple', schema: types }
+      }
     }
 
     let typenamePos = pos.copy()
-    let typename = readName(source, pos)
+    let {name: typename} = readKey(source, pos)
 
     while (pos.skipWhitespace(source)) {}
 
@@ -222,11 +179,11 @@ function readType (source: string, pos: Pos) {
       if (typename !== 'list') {
         throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
       }
-      let block = parseDefs(source, pos, '}')
-      return [typename, block]
+      let block = parseBlock(source, pos)
+      return { type: 'list', block }
     }
     else if (c3 === ',' || c3 === '}' || c3 === ']' || pos.i === source.length) {
-      return typename
+      return { type: typename } as Schema.t
     }
 
     throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
@@ -235,11 +192,11 @@ function readType (source: string, pos: Pos) {
     throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
   }
 
-  return 'str'
+  return { type: 'str' }
 }
 
-function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): string[] {
-  var types: string[] = []
+function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.BasicType[] {
+  var types: Schema.BasicType[] = []
 
   while (pos.i < source.length) {
     let c = source[pos.i]
@@ -264,14 +221,20 @@ function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): string[] 
     }
 
     let namePos = pos.copy()
-    let name = readName(source, pos)
+    let {name} = readKey(source, pos)
 
     while (pos.skipWhitespace(source)) {}
 
-    if (basicTypes.indexOf(name) === -1) {
+    if (name === '') {
+      break
+    }
+
+    let type = basicTypeFromName(name)
+
+    if (! type) {
       throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, and bool.`)
     }
-    types.push(name)
+    types.push(type)
   }
 
   throw new ZamlError('syntax-error', openParenPos, `Missing end parenthesis ")"`)

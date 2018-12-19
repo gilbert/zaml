@@ -6,24 +6,37 @@ export const whitespace = /[ \t\n\r]/
 export const reservedOps = /[\^&#@~`]/
 export const trailingWhitespace = /[ \t\n\r]*$/
 
-//
-// Schema defs
-//
-type BasicType = 'num' | 'str' | 'bool'
-type ValueType
-  = ({ name: 'num' }
-  | { name: 'str' }
-  | { name: 'kv' }
-  | { name: 'list', blockSchema?: Schema }
-  | { name: 'bool' }
-  | { name: 'block', blockSchema: Schema }
-  | { name: 'tuple', types: BasicType[], blockSchema?: Schema }
-  ) & { multi: boolean }
+export namespace Schema {
+  type Common = { multi?: boolean }
 
-export type Schema = Record<string,ValueType>
+  export type Hash = { type: 'hash', schema: Record<string,t> }
+  export type Array = { type: 'array', schema: Record<string,t> }
+
+  export type Block = Hash | Array
+
+  export type BasicType
+    = { type: 'num' }
+    | { type: 'str' }
+    | { type: 'bool' }
+
+  export type t
+    = BasicType & Common
+    | Block & Common
+    | { type: 'kv' } & Common
+    | { type: 'list', block?: Block } & Common
+    | { type: 'tuple', schema: BasicType[], block?: Block } & Common
+}
+
 
 export const validTypes = ['num', 'str', 'kv', 'list', 'bool']
-export const basicTypes = ['num', 'str', 'bool']
+export const BLOCKABLE_TYPES = ['str', 'num', 'bool', 'tuple']
+
+export function basicTypeFromName (name: string): Schema.BasicType | null {
+  if (name === 'num' || name === 'str' || name === 'bool') {
+    return { type: name } as Schema.BasicType
+  }
+  return null
+}
 
 //
 // Errors

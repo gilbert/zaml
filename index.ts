@@ -1,19 +1,16 @@
-import {Pos, ZamlError} from './src/util'
-import {parseSchema, createSchema} from './src/schema'
+import {Pos, ZamlError, Schema} from './src/util'
+import {parseSchema} from './src/schema'
 import {lex, parseZaml, ParseOptions} from './src/parser'
 
-export {parseSchema, createSchema} from './src/schema'
+export {parseSchema} from './src/schema'
 
-export function parse (source: string, definitions: string | object, options: ParseOptions={}) {
+export function parse (source: string, schema: string | Schema.Block, options: ParseOptions={}) {
   if (options.vars && Object.keys(options.vars).length === 0) {
     delete options.vars
   }
   try {
-    var schema = createSchema(
-      typeof definitions === 'string' ? parseSchema(definitions) : definitions
-    )
     var statements = lex(source, new Pos())
-    return parseZaml(source, schema, statements, options)
+    return parseZaml(source, typeof schema === 'string' ? parseSchema(schema) : schema, statements, options)
   }
   catch (e) {
     if (e instanceof ZamlError) {

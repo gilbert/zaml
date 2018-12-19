@@ -41,7 +41,7 @@ Zaml's syntax is clean, effective, and not obsessed with your shift key:
 ```js
 import {parse} from 'zaml'
 
-var schema = 'fileRoots:{dev:list,prod:list}'
+var schema = '{ fileRoots: { dev:list, prod:list } }'
 
 var zamlContent = `
 
@@ -64,7 +64,7 @@ var result = parse(zamlContent, schema, { vars: process.env })
 console.log("Got result:", result)
 ```
 
-(You can [run this example in your browser](https://flems.io/#0=N4IgZglgNgpgziAXAbVAOwIYFsZJAOgAsAXLKEAGhAGMB7NYmBvAHkIGYA+FjAAkIBOMMAF4AOiBLEADnEQB6eQHMIxQgFcARvjpZl0TTAHF5AL2xQJnAFoWW8jJ14B5dTLeJ7HTmLQtpQrwQACbiIEJw6lDEcFb2ATCclCBwMLDUxBD0CIggAIyIAEwALCAAvhTo2Li5+ABWCFR0DEzEeABuGAK85mQAwvSMDLwivAAGvry8AMS8ACqEEHBBy7ZkAISTvJCwAEq0tDG8wFtTwTDtx6dTvAAkABLOALIAovLn7fKpAu0Q1PDXKYPZ5vD5fYgYRixNA3Xhla4BWjBK4w2F3R6veSI4JfIy-f5wAC0hUB6JBWIESPBkIBqKm8NRDImaE63Tg1EIMCwfFGAHIdjB9oc5MAPogoEtiBRseLJWVeb5WbxWctRsBeBiXoheLz5IRaDgHBL-ry4b5iAIAJ4oqZK2huEa8NZQfDSLqpAAUvSgAxaDAovHZnO5AfVKrhAEothEojF8BA0GgjPc5k8ADKOgBSAGVnAA5fBwC0JlRgS0e+1StBRKAUU28qNoBnUSEcj1GAQRm28GPRODxxPJ1MZ0Yd-A4OBwDBKGC+BnJXTSaBGPCaDCGchUVLpTLZPAANkQAFZypUQJgcHgdJOF4NWnhygBdKgStAAaxyqHP1TwCfOAA98E0SkAHdvnqRoQHUARyFyKRZAUeR1DQaQ3yUHQDTMCwAAEAAZ8AATkI95JXkP8YEA4DaDAowIOSYhLWkGoUmoAQIGkNoykfMogA)
+(You can [run this example in your browser](https://flems.io/#0=N4IgZglgNgpgziAXAbVAOwIYFsZJAOgAsAXLKEAGhAGMB7NYmBvAHkIGYA+FjAAkIBOMMAF4AOiBLEADnEQB6eQHMIxQgFcARvjpZl0TTAHF5AL2xQJnAFoWW8jJ14B5dTLeJ7HTmLQtpQrwQACbiIEJw6lDEcFb2ATCclCBwMLDUxBD0CIggAIyIAEwALCAAvhTo2Li5+ABWCFR0DEzEeABuGAK85mQAwvSMDLwivAAGvry8AMS8ACqEEHBBy7ZkAISTvJCwAEq0tDG8wFtTwTDtx6dTvAAkABLOALIAovLn7fKpAu0Q1PDXKYPZ5vD5fYgYRixNA3Xhla4BWjBK4w2F3R6veSI4JfIy-f5wAC0hUB6JBWIESPBkIBqKm8NRDImaE63Tg1EIMCwfFGAHJgNtoDB9oc5MdeB9EFAlsQKLxsVKZWU4bzfKzeKzlqMBRiXoheLz5IRaDgHNL-ry4b5iAIAJ4oqbq2huEa8NZQfDSLqpAAUvSgAxaDDl7M53LlAs1cIAlFsIlEYvgIGg0EZ7nMngAZV0AKQAys4AHL4OA25MqMC2n3O2VoKJQCiW3mxtAM6iQjk+owCaMO3jx6JwJMptMZ7Ojbv4HBwOAYJQwXwM5K6aRCgR4TQYQzkKipdKZbJ4PLFIoAdnKlRAmBweB0M+Xg1aeHKAF0qNK0ABrHKoK-VPDJucAAe+CaJSADu3z1I0IDqAI5C5FIsgKPI6hoNIn5KDoJpmBYAACAAM+AAJwke8MryIBMAgWBtCQUY0HJMQtrSDUKTUAIEDSG0ZQvmUQA)
 
 Parsing the above will result in this data structure:
 
@@ -110,49 +110,49 @@ title This is # not a comment
 A `bool` accepts `true` or `false`
 
 ```zaml
-# if your schema is autoCleanup:bool
+# if your schema is {autoCleanup:bool}
 
 autoCleanup true
 
-#=> { "autoCleanup": bool }
+#=> { "autoCleanup": true }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAgrgFwPYGEA2MCAdugA7IBG22+IANONugE4QwppZ6EnkAEmFug4BfIA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMBBXALgewMIA2MCAdhgA7IBGOOBAviADTg4YBOEMKImuhxMuQAEWdhm70gA)
 
 ### num
 
 A `num` accepts a single numerical value.
 
 ```zaml
-# if your schema is port:num
+# if your schema is {port:num}
 
 port 3000
 
 #=> { "port": 3000 }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwPYCcAuyB2ArnCADTgaFYQwrrY4AEAzAAzsA6+IAvkA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMADgewE4BdkB2ArnAL4gA04mR2EMKIWeABAMwAMXAOgSKUA)
 
 ### str
 
 A `str` is the default type of any unspecified schema key.
 
 ```zaml
-# if your schema is title OR title:str
+# if your schema is {title} OR {title:str}
 
 title ~/home/my-proj
 
 #=> { "title": "~/home/my-proj" }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAFwJZoDYxAGnAHsBXAJwj1UxxgAIA-AeiiLhibgE8BaABzJEAVgB0AdiAC+QA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgS3QGxgXxABpwB7AVwCcIYUQtcYACAPwHopS4Y24BPALQAHSqQBWAHQB2IfEA)
 
 ### kv
 
 A `kv` is a set of key-value pairs. It requires a block.
 
 ```zaml
-# if your schema is redirects:kv
+# if your schema is {redirects:kv}
 
 redirects {
   /contact       /contact-us
@@ -164,14 +164,14 @@ redirects {
 
 Please note Zaml **is not** indentation sensitive.
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgFzGQGsA3EAGnAHsBXNCGFdLXGAsAAmAB0A7TpwD0Ean3wICg6YJFiJBALS0w-WQAc01AGbYANjCHIVMNMNpGTafgF9+IG0A)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMATjAJgS0xAFzGQGsA3AXxABpwB7AV3QhhRE13yIAJgAdAHbduAegh0BBBIWGzhYiVMIBaBmEHyADujoAzHABsYI5GpjpRDE2fSCKgkBSA)
 
 ### hash block
 
 A `{}` block is a specified inner schema. It translates to a hash that only allows your specified keys.
 
 ```zaml
-# if your schema is project:{title,private:bool}
+# if your schema is {project:{title,private:bool}}
 
 project {
   title My Sweet App
@@ -181,14 +181,14 @@ project {
 #=> { "project": { "title": "My Sweet App", "private": true } }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuywBAlgQDYwA0mpAbggTMgEZZYUC+I14WAVwwQYKdNjyEABMAA6AOylSylGFICyATykBlAO4wYBKQEE0aBUrqNmyjAJgKuCkFyA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMADgJwPYCsYQAuywhAloQDYwA0WZAbgoTMgEbbaUC+3IN4bAFdMEGChBY8BQgAJgAHQB2s2eSoxZAWQCesgMoB3GDDkBBdOmWr6TFmsxCYy7spDcgA)
 
 ### list
 
 A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
 
 ```zaml
-# if your schema is tags:list
+# if your schema is {tags:list}
 
 # Inline example
 tags library npm "with spaces" js
@@ -204,12 +204,12 @@ tags {
 #=> { "tags": ["library", "npm", "with spaces", "js"] }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAFwQczMgNgSzDRABpwB7AVwCcIYUQBiAAgEkA7A9mZmADwRwADrhgAddiwzZmBAEbUE1AJ7N2QuMzEgA7vjRRmYIQjphtzAFbn2ElgCFc5CAGteA4aInSwzYBOZZfAUlZQC1DXC9AyMTM3DrCQBfCRAkoA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgg5mZAbASzHQF8QAacAewFcAnCGFEAYgAIBJAO0K5jZgAPBHAAOeGAB0u7TDjaEARnQR0Anmy6i4bSSADuBdFDZhRCRmD1sAVla7T2AITxUIAawHCxE6XLBswNJsCgTKqmrBmtpRhsam5pZRdtIk0iAkQA)
 
 You can also enhance your list by making a block available to each `str`.
 
 ```zaml
-# if your schema is users:list{admin:bool}
+# if your schema is {users:list{admin:bool}}
 
 users {
   andy
@@ -222,7 +222,7 @@ users {
 #=> { "users": [["andy"], ["beth", {admin: true}], ["carl"]] }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAVzDATmZAbASzABdgEATOAgO2QCMB7BvAXxABpwG0sIYV0mHAAJgAHWrDhCauQCeEqXRjEooxVOmUaw4ljQwNLDRARY8E49RAsgA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMArmGAnMyA2AlmAC7AIAmchAdsgEYD2j+AvqyADTiPrYQwUITDjAACYAB0aYsQhoUAntNn0YJKBJWy5VWmJLZ0Mba20QE2fNLM0QrIA)
 
 Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each list item:
 
@@ -241,7 +241,7 @@ for (let [user, options] of result.users) {
 Appending the `|multi` attribute to a key allows your users to specify it more than once.
 
 ```zaml
-# if your schema is project|multi:{title,type}
+# if your schema is {project|multi:{title,type}}
 
 project {
   title A
@@ -254,38 +254,38 @@ project {
 #=> { "project": [{ "title": "A" }, { "title": "B", "type": "personal" }] }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuAPnAK4A2BAlssNQeTADQECeaMAviE+FqRggwU6bHkIACYAB0AdhIn1GEgIJzOczLnwEpchUpgSAQvsXsjHDGCyyE5dXJCcgA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMADgJwPYCsYQAuAPnAK4A2hAlssDYRTADSECe6MAvlyM+NjKYIMFCCx4ChAATAAOgDtp0hk2kBBRV0UT8RWYuWqY0gEKGVHE50xhsChBS2KQXIA)
 
 It will also guarantee your key is always present, even if the user does not provide any.
 
 ```zaml
-# if your schema is project|multi:{title,type}
+# if your schema is {project|multi:{title,type}}
 
 # (intentionally left blank)
 
 #=> { "project": [] }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhABwE4HsBWMIAuAPnAK4A2BAlssNQeTADQECeaMAviE+FqRggwUIEJyA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMADgJwPYCsYQAuAPnAK4A2hAlssDYRTADSECe6MAvlyM+NjKYIMFCBBcgA)
 
 ### tuple
 
 A tuple captures two or more values for a given key. You can specify one with parenthesis:
 
 ```zaml
-# if your schema is redirect:(num,str,str)
+# if your schema is {redirect:(num,str,str)}
 
 redirect 302 /old /new
 
 #=> { "redirect": [302, "old", "new"] }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgF2QAoA7AVzgBox81raBKES8AezLQhhXS1xgIACAMwAGAEyCA9KwA2maSRgB3ADokQAXyA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMATjAJgS0xAF2QAoA7AVzgBowD0a6BKAXxCvAHtz0IYURMufAQAEAZgAMAJhEB6DgBssc0jADuAHVIhmQA)
 
 Please note that tuples may only contain basic types (`str`, `num`, and `bool`). However, you're free to mix tuples with other features:
 
 ```zaml
-# if your schema is redirect|multi:(num,str,str){enableAt}
+# if your schema is {redirect|multi:(num,str,str){enableAt}}
 
 redirect 301 /x /y
 
@@ -296,7 +296,7 @@ redirect 302 /old /new {
 #=> { "redirect": [[301, "x", "y"], [302, "/old", "/new", { "enableAt": "2020-10-10" }]] }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhAJxgEwJYYgFwB84BXAG322QAoA7EuAGjHzWdYEpgZaEAjMjACC+AL4hG4APYk0EGCnRZcMAgAIAzAAYAjGoD0ADwMBPADq0LGHHnyatAJgNSymA7RgB3NcAtq1PPyCImoOjloAtDqR0RaiFiCiQA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAJxgEwJbYQAuAPnAK4A2ReyAFAHblwA0YRmbHAlMDAwgBGlGAEEiAX3QSQLcAHtymCDBQhs+QkXQBmAAwBGdAHoAHiYCeAHQY2NBGMV16ATCfmUcJhjADu6YBt0dH4hEXF0F1c9AFoDWPibCRsQCSA)
 
 ### array block
 
@@ -305,7 +305,7 @@ NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
 A `[]` block is an array of items from a specified schema. It translates to an array of key-value tuples.
 
 ```zaml
-# if your schema is sidebar:[header,link:(str,str)]
+# if your schema is {sidebar:[header,link:(str,str)]}
 
 sidebar {
   header Site
@@ -333,25 +333,6 @@ for (let [type, value] of result.sidebar) {
   //
 }
 ```
-
-### key|list
-
-NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
-
-If you use `list` as a key attribute instead of a type, your schema will accept an arbitrary number of inline arguments AND a block.
-
-```zaml
-# if your schema is when|list{include|multi}
-
-when development test {
-  include lib/profiler.js
-  include linter.js
-}
-
-#=> { "when": [["development", "test"], { include: ["lib/profiler.js", "linter.js"] }] }
-```
-
-Note that a block is the only valid type when using the `|list` attribute.
 
 ## JavaScript API
 
