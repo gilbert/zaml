@@ -8,6 +8,7 @@ import {
   Schema,
   ZamlError,
   validTypes,
+  BLOCKABLE_TYPES,
   basicTypeFromName,
   whitespace,
 } from './util'
@@ -175,12 +176,12 @@ function readType (source: string, pos: Pos): Schema.t {
 
     let c3 = source[pos.i]
 
-    if (c3 === '{') {
-      if (typename !== 'list') {
+    if (c3 === '{' || c3 === '[') {
+      if (BLOCKABLE_TYPES.indexOf(typename) === -1) {
         throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
       }
       let block = parseBlock(source, pos)
-      return { type: 'list', block }
+      return { type: typename, block } as Schema.t
     }
     else if (c3 === ',' || c3 === '}' || c3 === ']' || pos.i === source.length) {
       return { type: typename } as Schema.t

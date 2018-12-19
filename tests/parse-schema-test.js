@@ -28,11 +28,68 @@ o.spec("Schema parsing", function () {
     })
   })
 
+  o("str block", function () {
+    o(p('{user:str{admin:bool}}')).deepEquals({
+      type: 'hash',
+      schema: {
+        user: {
+          type: 'str',
+          block: {
+            type: 'hash',
+            schema: { admin:{type:'bool'} }
+          }
+        }
+      }
+    })
+  })
+
+  o("num block", function () {
+    o(p('{user:num{admin:bool}}')).deepEquals({
+      type: 'hash',
+      schema: {
+        user: {
+          type: 'num',
+          block: {
+            type: 'hash',
+            schema: { admin:{type:'bool'} }
+          }
+        }
+      }
+    })
+  })
+
+  o("bool block", function () {
+    o(p('{user:bool{admin:bool}}')).deepEquals({
+      type: 'hash',
+      schema: {
+        user: {
+          type: 'bool',
+          block: {
+            type: 'hash',
+            schema: { admin:{type:'bool'} }
+          }
+        }
+      }
+    })
+  })
+
   o("array block", function () {
     o(p('{user:[name,score:num]}')).deepEquals({
       type: 'hash',
       schema: {
         user: { type: 'array', schema: { name:{type:'str'}, score:{type:'num'} } }
+      }
+    })
+  })
+
+  o("num array block", function () {
+    o(p('{n:num[a,b:num]}')).deepEquals({
+      type: 'hash',
+      schema: {
+        n: {
+          type: 'num',
+          block: { type: 'array', schema: { a:{type:'str'}, b:{type:'num'} } }
+        }
       }
     })
   })

@@ -8,6 +8,7 @@ export const trailingWhitespace = /[ \t\n\r]*$/
 
 export namespace Schema {
   type Common = { multi?: boolean }
+  type WithBlock = { block?: Block }
 
   export type Hash = { type: 'hash', schema: Record<string,t> }
   export type Array = { type: 'array', schema: Record<string,t> }
@@ -20,16 +21,16 @@ export namespace Schema {
     | { type: 'bool' }
 
   export type t
-    = BasicType & Common
+    = BasicType & Common & WithBlock
     | Block & Common
     | { type: 'kv' } & Common
-    | { type: 'list', block?: Block } & Common
-    | { type: 'tuple', schema: BasicType[], block?: Block } & Common
+    | { type: 'list' } & Common & WithBlock
+    | { type: 'tuple', schema: BasicType[] } & Common & WithBlock
 }
 
 
 export const validTypes = ['num', 'str', 'kv', 'list', 'bool']
-export const BLOCKABLE_TYPES = ['str', 'num', 'bool', 'tuple']
+export const BLOCKABLE_TYPES = ['str', 'num', 'bool', 'tuple', 'list']
 
 export function basicTypeFromName (name: string): Schema.BasicType | null {
   if (name === 'num' || name === 'str' || name === 'bool') {

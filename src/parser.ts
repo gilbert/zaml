@@ -266,7 +266,7 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
     //
     // Handle blocks
     //
-    if (s.block && BLOCKABLE_TYPES.indexOf(t.type) >= 0) {
+    if (s.block && BLOCKABLE_TYPES.indexOf(t.type) >= 0 && t.type !== 'list') {
       let innerBlockSchema = ('block' in t) && t.block
       if (! innerBlockSchema) {
         throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
