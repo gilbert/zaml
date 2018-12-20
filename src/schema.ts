@@ -54,12 +54,19 @@ function parseBlock (source: string, pos: Pos): Schema.Block {
   while (pos.skipWhitespace(source)) {}
 
   while (pos.i < source.length) {
+    var keyStart = pos.copy()
     var key = readKey(source, pos)
 
     while (pos.skipWhitespace(source)) {}
 
     if (key.name !== '') {
+      if (result.schema[key.name]) {
+        throw new ZamlError('user-error', keyStart,
+          `Duplicate key: "${key.name}" has already been defined in this context.`)
+      }
+
       var type = readType(source, pos)
+
       if (key.multi) type.multi = true
       result.schema[key.name] = type
     }
@@ -202,23 +209,8 @@ function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.Ba
   while (pos.i < source.length) {
     let c = source[pos.i]
 
-    if (c === ',') {
-      pos.newcol()
-      while (pos.skipWhitespace(source)) {}
-      continue
-    }
-
-    if (c === ')') {
-      pos.newcol()
-      return types
-    }
-
     if (c === ':' || c === '(') {
       throw new ZamlError('syntax-error', pos, unexp(c))
-    }
-
-    if (c === '{') {
-      throw new ZamlError('syntax-error', pos, unexp(c, ' (blocks are not allowed within a tuple type)'))
     }
 
     let namePos = pos.copy()
@@ -226,16 +218,34 @@ function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.Ba
 
     while (pos.skipWhitespace(source)) {}
 
-    if (name === '') {
-      break
+    if (name !== '') {
+      let type = basicTypeFromName(name)
+
+      if (! type) {
+        throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, and bool.`)
+      }
+      types.push(type)
     }
 
-    let type = basicTypeFromName(name)
+    let c2 = source[pos.i]
 
-    if (! type) {
-      throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, and bool.`)
+    if (c2 === ',') {
+      pos.newcol()
+      while (pos.skipWhitespace(source)) {}
+      continue
     }
-    types.push(type)
+
+    if (c2 === ')') {
+      pos.newcol()
+      return types
+    }
+
+    if (c2 === '{') {
+      throw new ZamlError('syntax-error', pos, unexp(c2, ' (blocks are not allowed within a tuple type)'))
+    }
+
+    var hint = c2.match(/[a-z0-9]/i) ? ' (did you forget a comma?)' : ''
+    throw new ZamlError('syntax-error', pos, unexp(c2, hint))
   }
 
   throw new ZamlError('syntax-error', openParenPos, `Missing end parenthesis ")"`)

@@ -108,13 +108,23 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
+  o("tuple types no separator", function () {
+    try {
+      p(`{project:(str str)}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 15, /unexpected/i, /s/i, /forget/i, /comma/i)
+    }
+  })
+
   o("missing tuple paren", function () {
     try {
       p(`{project:(num,bool}`)
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'syntax-error', 1, 10, /missing/i, /"\)"/i,)
+      checkError(err, 'syntax-error', 1, 19, /unexpected/i, /"\}"/i,)
     }
   })
 
@@ -125,6 +135,16 @@ o.spec("Schema Parse Errors", function () {
     }
     catch (err) {
       checkError(err, 'syntax-error', 1, 1, /missing/i, /"\}"/i,)
+    }
+  })
+
+  o("duplicate key definitions", function () {
+    try {
+      p(`{x,y,x}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 6, /duplicate/i, /"x"/i,)
     }
   })
 })

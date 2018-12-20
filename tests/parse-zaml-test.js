@@ -186,10 +186,10 @@ o.spec("Syntactic features", function () {
 
   o("single-line string", function () {
     var result = parse(`
-      items alice "big bob" robot
+      items alice "big bob" robot " go  "
     `, '{items:list}')
 
-    o(result).deepEquals({ items: ['alice', 'big bob', 'robot'] })
+    o(result).deepEquals({ items: ['alice', 'big bob', 'robot', ' go  '] })
   })
 
   o("comments", function () {
