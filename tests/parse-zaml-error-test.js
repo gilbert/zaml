@@ -102,7 +102,7 @@ o.spec("Parse Errors", function () {
     }
   })
 
-  o("incorrect number of tuple args", function () {
+  o("too few tuple args", function () {
     try {
       parse(`
         foo x y
@@ -111,6 +111,18 @@ o.spec("Parse Errors", function () {
     }
     catch (err) {
       checkError(err, 'user-error', 2, 9, /incorrect number/i, /arguments/i, /foo/, /str str str/)
+    }
+  })
+
+  o("too many tuple args", function () {
+    try {
+      parse(`
+        foo x y z
+      `, '{foo:(str,str)}')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 2, 17, /too many/i, /arguments/i, /foo/, /str str/)
     }
   })
 

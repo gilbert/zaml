@@ -221,6 +221,11 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
     }
     else if (t.type === 'tuple') {
       let args = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, k, pos) => {
+        if (k >= t.schema.length) {
+          let types = t.schema.map(t => t.type).join(' ')
+          throw new ZamlError('user-error', pos,
+            `Too many arguments; tuple only accepts ${types}`)
+        }
         let t2 = t.schema[k]
         //
         // No need to transform with withVars at this point since
