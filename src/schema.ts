@@ -5,6 +5,7 @@
 //
 import {
   Pos,
+  unexp,
   Schema,
   ZamlError,
   validTypes,
@@ -249,8 +250,4 @@ function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.Ba
   }
 
   throw new ZamlError('syntax-error', openParenPos, `Missing end parenthesis ")"`)
-}
-
-function unexp (char: string, more='') {
-  return `Unexpected ${JSON.stringify(char)}${more}`
 }

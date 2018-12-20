@@ -91,47 +91,58 @@ o.spec("Parse Errors", function () {
   o("tuple no block", function () {
     try {
       parse(`
-        foo x y {
+        foo x, y {
           not valid
         }
       `, '{foo:(str,str)}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'user-error', 2, 17, /block/i, /foo/)
+      checkError(err, 'user-error', 2, 18, /block/i, /foo/)
     }
   })
 
   o("too few tuple args", function () {
     try {
       parse(`
-        foo x y
+        foo x, y
       `, '{foo:(str,str,str)}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'user-error', 2, 9, /incorrect number/i, /arguments/i, /foo/, /str str str/)
+      checkError(err, 'user-error', 2, 9, /incorrect number/i, /arguments/i, /foo/, /str, str, str/)
     }
   })
 
   o("too many tuple args", function () {
     try {
       parse(`
-        foo x y z
+        foo x, y, z
       `, '{foo:(str,str)}')
       o("Should not be successful").equals(false)
     }
     catch (err) {
-      checkError(err, 'user-error', 2, 17, /too many/i, /arguments/i, /foo/, /str str/)
+      checkError(err, 'user-error', 2, 19, /too many/i, /arguments/i, /foo/, /str str/)
     }
   })
 
   o("missing end bracket", function () {
     try {
-      parse('oops {', { oops: { inner: 'str' } })
+      parse('oops {', '{oops:{inner}}')
+      o("Should not be successful").equals(false)
     }
     catch (err) {
       checkError(err, 'syntax-error', 1, 7, /missing end bracket/i)
+    }
+  })
+
+  o("character after quoted string", function () {
+    try {
+      parse('tags one, "two" three', '{tags:list}')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 17, /unexpected/i, /"t"/, /forget/i, /comma/i)
     }
   })
 

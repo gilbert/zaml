@@ -87,6 +87,10 @@ export function isObj (x: any) {
   return Object.prototype.toString.call(x) === '[object Object]'
 }
 
+export function unexp (char: string, more='') {
+  return `Unexpected ${JSON.stringify(char)}${more}`
+}
+
 function range (start: number, end: number) {
   var result = []
   for (var i=start; i < end; i++) result.push(i)

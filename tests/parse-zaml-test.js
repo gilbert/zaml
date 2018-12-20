@@ -53,7 +53,7 @@ o("list", function () {
       two
       three
     }
-    inline x y z
+    inline x, y , z
   `, {
     type: 'hash',
     schema: {
@@ -115,9 +115,13 @@ o("multi", function () {
   })
 })
 
+o("multi list", function () {
+  // TODO
+})
+
 o("tuple", function () {
   var result = parse(`
-    redirect 301 /old /new
+    redirect 301, /old, /new
   `, '{redirect:(num,str,str)}')
 
   o(result).deepEquals({
@@ -127,7 +131,7 @@ o("tuple", function () {
 
 o("tuple block", function () {
   var result = parse(`
-    redirect 301 /old /new {
+    redirect 301, /old, /new {
       enabled false
     }
   `, '{redirect:(num,str,str){enabled:bool}}')
@@ -142,7 +146,7 @@ o.spec("ParseOptions", function () {
     var result = parse(`
       num $X
       str $A$A$B
-      lst $C $C
+      lst $C, $C
       hsh {
         $D ddd
         eee $E
@@ -186,7 +190,7 @@ o.spec("Syntactic features", function () {
 
   o("single-line string", function () {
     var result = parse(`
-      items alice "big bob" robot " go  "
+      items alice , "big bob"  , robot  , " go  "
     `, '{items:list}')
 
     o(result).deepEquals({ items: ['alice', 'big bob', 'robot', ' go  '] })

@@ -1,5 +1,6 @@
 import {
   Pos,
+  unexp,
   Schema,
   ZamlError,
   brackets,
@@ -36,7 +37,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
 
     if (c === '}') {
       if (! inBlock) {
-        throw new ZamlError('syntax-error', pos, `Unexpected }`)
+        throw new ZamlError('syntax-error', pos, unexp(c))
       }
       return results
     }
@@ -61,7 +62,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
 
     // Whitelist errors
     if (brackets.test(c)) {
-      throw new ZamlError('syntax-error', pos, `Unexpected ${c}`)
+      throw new ZamlError('syntax-error', pos, unexp(c))
     }
 
     // Special character escapes
@@ -251,16 +252,10 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
       })
 
       if (args.length !== t.schema.length) {
-        let types = t.schema.map(t => t.type).join(' ')
+        let types = t.schema.map(t => t.type).join(', ')
         throw new ZamlError('user-error', s.pos,
-          `Incorrect number of arguments. Key '${s.name}' only accepts ${types}.`)
+          `Incorrect number of arguments. Key '${s.name}' expects ${types}.`)
       }
-      // if (s.block && ! t.block) {
-      //   throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
-      // }
-      // else if (s.block && t.block) {
-      //   args.push(parseZaml(source, t.block, s.block, opts))
-      // }
 
       parsedValue = args
     }
@@ -329,24 +324,35 @@ function parseArgs (
   while (pos.i < end.i) {
     let c = source[pos.i]
 
-    if (pos.skipSpace(source)) continue
-
-    // Quoted strings
+    // Quoted string
     if (c === '"') {
       let start = pos.copy()
       let arg = parseQuotedString(source, pos.newcol(), end)
       args.push(map(withVars(arg, start, opts), args.length, start))
     }
 
-    // Argument complete
+    // Unquoted string
     else {
       let start = pos.copy()
-      while (pos.i < end.i && source[pos.i] !== ' ' && source[pos.i] !== '\t') {
+      while (pos.i < end.i && source[pos.i] !== ',' && source[pos.i] !== '\n') {
         pos.newcol()
       }
-      let arg = source.substring(start.i, pos.i)
+      let arg = source.substring(start.i, pos.i).trim()
       args.push(map(withVars(arg, start, opts), args.length, start))
     }
+
+    while (pos.skipSpace(source)) {}
+
+    let c2 = source[pos.i]
+    if (c2 === '\n' || c2 === '{' && source[pos.i+1] === '\n') {
+      return args
+    }
+    if (c2 === ',') {
+      pos.newcol()
+      while (pos.skipSpace(source)) {}
+      continue
+    }
+    throw new ZamlError('syntax-error', pos, unexp(c2, ' (did you forget a comma?)'))
   }
 
   return args

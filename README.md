@@ -135,14 +135,14 @@ port 3000
 
 ### str
 
-A `str` is the default type of any unspecified schema key.
+A `str` is the default type of any unspecified schema key. It accepts any character until it reaches a newline.
 
 ```zaml
 # if your schema is {title} OR {title:str}
 
-title ~/home/my-proj
+title You, Yourself, and U
 
-#=> { "title": "~/home/my-proj" }
+#=> { "title": "You, Yourself, and U" }
 ```
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgS3QGxgXxABpwB7AVwCcIYUQtcYACAPwHopS4Y24BPALQAHSqQBWAHQB2IfEA)
@@ -191,7 +191,7 @@ A `list` is *always* sequence of `str`. A user can write lists either inline or 
 # if your schema is {tags:list}
 
 # Inline example
-tags library npm "with spaces" js
+tags library, npm, with spaces, js
 
 # Block example
 tags {
@@ -206,7 +206,7 @@ tags {
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgg5mZAbASzHQF8QAacAewFcAnCGFEAYgAIBJAO0K5jZgAPBHAAOeGAB0u7TDjaEARnQR0Anmy6i4bSSADuBdFDZhRCRmD1sAVla7T2AITxUIAawHCxE6XLBswNJsCgTKqmrBmtpRhsam5pZRdtIk0iAkQA)
 
-You can also enhance your list by making a block available to each `str`.
+You can also enhance your list by making a block available to each list item.
 
 ```zaml
 # if your schema is {users:list{admin:bool}}
@@ -234,6 +234,29 @@ for (let [user, options] of result.users) {
   //  and undefined for andy & carl
   //
 }
+```
+
+### inline-list
+
+NOTE: THIS FEATURE IS NOT IMPLEMENTED YET
+
+An inline list a [list](#list) that can only be written inline. This is useful when you want to extend your list with a block:
+
+```zaml
+# if your schema is { env|multi: inline-list{require|multi} }
+
+env development, test {
+  require lib-1
+  require lib-2
+}
+env production {
+  require lib-3
+}
+
+# => { "env": [
+#      [["development", "test"], { "require": ["lib-1","lib-2"] }],
+#      [["production"], { "require": ["lib-3"] }]
+#    ]}
 ```
 
 ### key|multi
@@ -270,12 +293,12 @@ project {
 
 ### tuple
 
-A tuple captures two or more values for a given key. You can specify one with parenthesis:
+A tuple captures two or more values for a given key, separated by commas. You can specify one in the schema using parenthesis:
 
 ```zaml
 # if your schema is {redirect:(num,str,str)}
 
-redirect 302 /old /new
+redirect 302, /old, /new
 
 #=> { "redirect": [302, "old", "new"] }
 ```
@@ -287,9 +310,9 @@ Please note that tuples may only contain basic types (`str`, `num`, and `bool`).
 ```zaml
 # if your schema is {redirect|multi:(num,str,str){enableAt}}
 
-redirect 301 /x /y
+redirect 301, /x, /y
 
-redirect 302 /old /new {
+redirect 302, /old, /new {
   enableAt 2020-10-10
 }
 
@@ -308,10 +331,10 @@ A `[]` block is an array of items from a specified schema. It translates to an a
 sidebar {
   header Site
   link Home /
-  link About /about
+  link About, /about
 
   header Account
-  link Settings /account/settings
+  link Settings, /account/settings
 }
 
 #=> { "sidebar": [
@@ -327,7 +350,7 @@ var result = parse(source, schema)
 for (let [type, value] of result.sidebar) {
   //
   // `type` will be "header" or "link",
-  //  whereas `value` will be a string (header) or array (link).
+  //  whereas `value` will be a string (for header) or an array (for link).
   //
 }
 ```
@@ -430,8 +453,9 @@ After lexing, the parser uses the schema to determine how to parse the `rest` an
 
 ## Roadmap
 
-- Allow inline `kv`
-- Allow blocks on `kv`, `num`, `bool`, `str`
+- `enum` type
+- Allow inline `kv`?
+- Allow blocks on `kv`
 - New `json` type for arbitrarily-nested json-like data?
 - Multiline strings? `text` type?
 - Split `num` into `int` and `float`?
@@ -442,8 +466,6 @@ After lexing, the parser uses the schema to determine how to parse the `rest` an
 
 Regarding the [online editor](https://gilbert.github.io/zaml/editor.html):
 
-- Linkable examples
-- URL-encoded content
 - `Get code` button
 - Fancy explanations of schema on hover
 
