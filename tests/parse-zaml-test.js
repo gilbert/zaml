@@ -116,7 +116,12 @@ o("multi", function () {
 })
 
 o("multi list", function () {
-  // TODO
+  var result = parse(`
+    tags a, b
+    tags c
+  `, '{tags|multi:list}')
+
+  o(result).deepEquals({ tags: [['a','b'], ['c']] })
 })
 
 o("tuple", function () {
