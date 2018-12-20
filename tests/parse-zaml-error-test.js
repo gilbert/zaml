@@ -55,6 +55,30 @@ o.spec("Parse Errors", function () {
     }
   })
 
+  o("list trailing comma", function () {
+    try {
+      r=parse(`tags x, y,  `, '{tags:list}')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 10, /unexpected/i, /comma/i)
+    }
+    try {
+      r=parse(`tags x, y,`, '{tags:list}')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 10, /unexpected/i, /comma/i)
+    }
+    try {
+      r=parse(`tags x, y,\n`, '{tags:list}')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 10, /unexpected/i, /comma/i)
+    }
+  })
+
   o("basic type no block", function () {
     try {
       parse(`

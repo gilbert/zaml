@@ -348,8 +348,13 @@ function parseArgs (
       return args
     }
     if (c2 === ',') {
+      let commaPos = pos.copy()
       pos.newcol()
       while (pos.skipSpace(source)) {}
+
+      if (pos.i === source.length || source[pos.i] === '\n') {
+        throw new ZamlError('syntax-error', commaPos, `Unexpected comma`)
+      }
       continue
     }
     throw new ZamlError('syntax-error', pos, unexp(c2, ' (did you forget a comma?)'))
