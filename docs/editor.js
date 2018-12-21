@@ -4,7 +4,7 @@
     {
       id: 'todo-list',
       name: 'Todo List',
-      schema: 'task|multi:{name,meta:kv}',
+      schema: '{ task|multi:{name,meta:kv} }',
       source:
 `task {
   name Check out this editor
@@ -31,11 +31,11 @@ task {
       id: 'package-json',
       name: 'package.json example',
       schema:
-`name, version, description,
+`{ name, version, description,
 main, author, license,
 scripts:kv,
 keywords:list,
-devDependencies:kv`,
+devDependencies:kv }`,
       source:
 `name zaml
 version 1.0.0
