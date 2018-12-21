@@ -125,6 +125,22 @@ function readKey (source: string, pos: Pos) {
   return result
 }
 
+function readEnum (source: string, pos: Pos) {
+  var start = pos.i
+  while (
+    pos.i < source.length &&
+    source[pos.i] !== '(' &&
+    source[pos.i] !== ')' &&
+    source[pos.i] !== ','
+  ) {
+    pos.newcol()
+  }
+  // if (source[pos.i] === '(') {
+  //   throw
+  // }
+  return source.substring(start, pos.i).trim()
+}
+
 function readType (source: string, pos: Pos): Schema.t {
   let c = source[pos.i]
 
@@ -181,6 +197,38 @@ function readType (source: string, pos: Pos): Schema.t {
       throw new ZamlError('user-error', typenamePos, `No such type: '${typename}'`)
     }
 
+    if (typename === 'enum') {
+      // if (source[pos.i] !== '(') {
+      //   throw
+      // }
+      pos.newcol()
+      while (pos.skipWhitespace(source)) {}
+
+      var options: string[] = []
+
+      while (pos.i < source.length) {
+        options.push(readEnum(source, pos))
+        while (pos.skipWhitespace(source)) {}
+
+        if (source[pos.i] === ',') {
+          pos.newcol()
+          while (pos.skipWhitespace(source)) {}
+        }
+        else if (source[pos.i] === ')') {
+          pos.newcol()
+          while (pos.skipWhitespace(source)) {}
+          break
+        }
+      }
+
+      if (source[pos.i] === '{' || source[pos.i] === '[') {
+        let block = parseBlock(source, pos)
+        return { type: typename, options, block } as Schema.t
+      }
+      else {
+        return { type: typename, options } as Schema.t
+      }
+    }
 
     let c3 = source[pos.i]
 

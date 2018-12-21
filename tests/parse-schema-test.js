@@ -161,6 +161,34 @@ o.spec("Schema parsing", function () {
     })
   })
 
+  o("enum", function () {
+    o(p('{verb:enum( GET  , P O S T ,  put)}')).deepEquals({
+      type: 'hash',
+      schema: {
+        verb: {
+          type: 'enum',
+          options: ['GET', 'P O S T', 'put'],
+        }
+      }
+    })
+  })
+
+  o.only("enum block", function () {
+    o(p('{verb:enum(a,b){cool:bool}}')).deepEquals({
+      type: 'hash',
+      schema: {
+        verb: {
+          type: 'enum',
+          options: ['a', 'b'],
+          block: {
+            type: 'hash',
+            schema: { cool: {type:'bool'} }
+          }
+        }
+      }
+    })
+  })
+
   o("not whitespace sensitive", function () {
     var result = p(`{
       x : {

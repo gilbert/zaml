@@ -24,12 +24,13 @@ export namespace Schema {
     = BasicType & Common & WithBlock
     | Block & Common
     | { type: 'kv' } & Common
+    | { type: 'enum' } & Common
     | { type: 'list' } & Common & WithBlock
     | { type: 'tuple', schema: BasicType[] } & Common & WithBlock
 }
 
 
-export const validTypes = ['num', 'str', 'kv', 'list', 'bool']
+export const validTypes = ['num', 'str', 'kv', 'list', 'bool', 'enum']
 export const BLOCKABLE_TYPES = ['str', 'num', 'bool', 'tuple', 'list']
 
 export function basicTypeFromName (name: string): Schema.BasicType | null {
