@@ -107,26 +107,26 @@
             token: "identifier",
             regex: "([^ \n\r]+)",
             onMatch: function (word, state) {
-              var currentSchema = blockKeys.reduce((s,k) => {
-                console.log("Checking", k, s)
-                if (! s) return s
-                var ss = s[k]
-                if (Array.isArray(ss)) {
-                  ss = ss[ss.length-1]
-                  return isObj(ss) && ss
-                }
-                else {
-                  return s[k]
-                }
+              var node = blockKeys.reduce((node,key) => {
+                if (! node) return node
+                var schema = node.schema && node.schema[key]
+                return node.schema && node.schema[key]
               }, schema)
 
-              if (! currentSchema) {
+              if (! node) {
                 return 'text'
               }
-              else if (currentSchema === 'kv') {
+              else if (node.type === 'kv') {
                 return 'kv_key'
               }
-              else if (currentSchema[word]) {
+              else if (node.block && node.block.schema[word]) {
+                potentialBlockKey = word
+                return 'configkey'
+              }
+              else if (
+                (node.type === 'hash' || node.type === 'array') &&
+                node.schema[word]
+              ) {
                 potentialBlockKey = word
                 return 'configkey'
               }
