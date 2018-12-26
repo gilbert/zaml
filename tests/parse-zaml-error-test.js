@@ -28,6 +28,18 @@ o.spec("Parse Errors", function () {
     }
   })
 
+  o("enum values", function () {
+    try {
+      parse(`
+        type z
+      `, '{type:enum(xx,yy)}')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 2, 14, /invalid/i, /'z'/, /must/i, /xx/, /yy/)
+    }
+  })
+
   o("NaN", function () {
     try {
       parse(`count nope`, '{count:num}')

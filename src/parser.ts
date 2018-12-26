@@ -162,6 +162,13 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
     else if (t.type === 'str') {
       parsedValue = withVars(s.args, s.pos, opts)
     }
+    else if (t.type === 'enum') {
+      parsedValue = withVars(s.args, s.pos, opts)
+      if (t.options.indexOf(parsedValue) === -1) {
+        throw new ZamlError('user-error', s.argsPos[0], `Invalid value: '${parsedValue
+        }'\n  Value must be one of: ${t.options.join(', ')}`)
+      }
+    }
     else if (t.type === 'bool') {
       let val = withVars(s.args, s.pos, opts)
       if (val === '') {

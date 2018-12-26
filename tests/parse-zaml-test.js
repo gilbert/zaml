@@ -146,6 +146,18 @@ o("tuple block", function () {
   })
 })
 
+o("enum", function () {
+  var result = parse(`
+    fileType image
+    owner Alice Alison
+  `, '{fileType:enum(image,video), owner:enum(Alice Alison, Bob)}')
+
+  o(result).deepEquals({
+    fileType: 'image',
+    owner: 'Alice Alison',
+  })
+})
+
 o.spec("ParseOptions", function () {
   o("vars", function () {
     var result = parse(`

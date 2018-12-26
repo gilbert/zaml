@@ -24,7 +24,7 @@ export namespace Schema {
     = BasicType & Common & WithBlock
     | Block & Common
     | { type: 'kv' } & Common
-    | { type: 'enum' } & Common
+    | { type: 'enum', options: string[] } & Common
     | { type: 'list' } & Common & WithBlock
     | { type: 'tuple', schema: BasicType[] } & Common & WithBlock
 }
