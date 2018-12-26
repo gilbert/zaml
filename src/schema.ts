@@ -135,9 +135,6 @@ function readEnum (source: string, pos: Pos) {
   ) {
     pos.newcol()
   }
-  // if (source[pos.i] === '(') {
-  //   throw
-  // }
   return source.substring(start, pos.i).trim()
 }
 
@@ -198,16 +195,20 @@ function readType (source: string, pos: Pos): Schema.t {
     }
 
     if (typename === 'enum') {
-      // if (source[pos.i] !== '(') {
-      //   throw
-      // }
+      if (source[pos.i] !== '(') {
+        throw new ZamlError('syntax-error', pos, unexp(source[pos.i], ' (Did you forget a parenthesis?)'))
+      }
       pos.newcol()
       while (pos.skipWhitespace(source)) {}
 
       var options: string[] = []
 
       while (pos.i < source.length) {
-        options.push(readEnum(source, pos))
+        var option = readEnum(source, pos)
+
+        if (option !== '') {
+          options.push(option)
+        }
         while (pos.skipWhitespace(source)) {}
 
         if (source[pos.i] === ',') {
@@ -219,6 +220,13 @@ function readType (source: string, pos: Pos): Schema.t {
           while (pos.skipWhitespace(source)) {}
           break
         }
+        else {
+          throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
+        }
+      }
+
+      if (options.length === 0) {
+        throw new ZamlError('user-error', typenamePos, 'An enum type must have at least one option.')
       }
 
       if (source[pos.i] === '{' || source[pos.i] === '[') {

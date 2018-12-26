@@ -128,6 +128,46 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
+  o("enum no paren", function () {
+    try {
+      p(`{thing:enum}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 12, /unexpected/i, /"\}"/i, /enum/i)
+    }
+  })
+
+  o("enum with invalid char", function () {
+    try {
+      p(`{thing:enum(a,b(c)}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 16, /unexpected/i, /"\("/i, /enum/i)
+    }
+  })
+
+  o("enum with no options", function () {
+    try {
+      p(`{thing:enum()}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 8, /at least one/i, /enum/i)
+    }
+  })
+
+  o("enum extra parens", function () {
+    try {
+      p(`{thing:enum(abc(d),e)}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 16, /unexpected/i, /"\("/)
+    }
+  })
+
   o("missing end bracket", function () {
     try {
       p(`{user:{\n  }`)

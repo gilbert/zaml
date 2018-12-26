@@ -173,7 +173,7 @@ o.spec("Schema parsing", function () {
     })
   })
 
-  o.only("enum block", function () {
+  o("enum block", function () {
     o(p('{verb:enum(a,b){cool:bool}}')).deepEquals({
       type: 'hash',
       schema: {
