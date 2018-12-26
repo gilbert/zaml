@@ -168,6 +168,16 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
+  o("enum reserved character", function () {
+    try {
+      p(`{x:enum(a:1,b)}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 10, /unexpected/i, /"\:"/)
+    }
+  })
+
   o("missing end bracket", function () {
     try {
       p(`{user:{\n  }`)

@@ -131,7 +131,8 @@ function readEnum (source: string, pos: Pos) {
     pos.i < source.length &&
     source[pos.i] !== '(' &&
     source[pos.i] !== ')' &&
-    source[pos.i] !== ','
+    source[pos.i] !== ',' &&
+    source[pos.i] !== ':'
   ) {
     pos.newcol()
   }
