@@ -27,7 +27,7 @@
       this.$rules = {
         start: [{
           token: "type",
-          regex: "(?:str|num|bool|kv|list|\\|multi)"
+          regex: "(?:str|num|enum|bool|kv|list|\\|multi)"
         }]
       }
       this.normalizeRules()
