@@ -147,6 +147,22 @@ title You, Yourself, and U
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgS3QGxgXxABpwB7AVwCcIYUQtcYACAPwHopS4Y24BPALQAHSqQBWAHQB2IfEA)
 
+### enum
+
+An `enum` is a [str](#str) with restricted options. It's useful for a "choose one" situation.
+
+```zaml
+# if your schema is { paymentMode: enum(test,live) }
+
+paymentMode test
+
+#=> { "paymentMode": "test" }
+```
+
+Naturally, if the user provides a value outside the schema, Zaml will reject it and report a readable error message.
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMADggnnGA7AFwFkB7AExmXwFc4AKAmMAgGgBsBLANxgEoBfEC3AlqAJwgwUITDnzFyMAASNmAHTwh+QA)
+
 ### kv
 
 A `kv` is a set of key-value pairs. It requires a block.
@@ -171,7 +187,7 @@ Please note Zaml **is not** indentation sensitive.
 A `{}` block is a specified inner schema. It translates to a hash that only allows your specified keys.
 
 ```zaml
-# if your schema is {project:{title,private:bool}}
+# if your schema is { project: { title, private:bool } }
 
 project {
   title My Sweet App
@@ -331,14 +347,14 @@ A `[]` block is an array of items from a specified schema. It translates to an a
 sidebar {
   header Site
   link Home /
-  link About, /about
+  link About Us, /about
 
   header Account
   link Settings, /account/settings
 }
 
 #=> { "sidebar": [
-#       ["header", "Site"], ["link", ["Home", "/"]], ["link", ["About", "/about"]],
+#       ["header", "Site"], ["link", ["Home", "/"]], ["link", ["About Us", "/about"]],
 #       ["header", "Account"], ["link", ["Settings", "/account/settings"]]
 #     ] }
 ```
@@ -453,7 +469,6 @@ After lexing, the parser uses the schema to determine how to parse the `rest` an
 
 ## Roadmap
 
-- `enum` type
 - Allow inline `kv`?
 - Allow blocks on `kv`
 - New `json` type for arbitrarily-nested json-like data?
