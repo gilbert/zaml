@@ -133,4 +133,23 @@ c C
     )
   })
 
+  o("multi", function () {
+    var result = stringify({
+      task: [
+        { name: 'one' },
+        { name: 'two' },
+      ]
+    }, '{task|multi:{name}}')
+
+    o(result).deepEquals(
+`task {
+  name one
+}
+task {
+  name two
+}
+`
+    )
+  })
+
 })

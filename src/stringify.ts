@@ -4,22 +4,30 @@ export type StringifyOptions = {
   indentDepth?: number
 }
 
-
 export function stringify (data: any, blockSchema: Schema.Block, opts: StringifyOptions): string {
   const parts: string[] = []
 
   const depth = opts.indentDepth || 0
   const i_1 = indentation(depth)
+  const seenMulti: Record<string,boolean> = {}
 
-  const dataItems = blockSchema.type === 'hash'
+  let dataQueue = blockSchema.type === 'hash'
     ? Object.keys(blockSchema.schema).map(configKey => [configKey, data[configKey]])
     : data
 
-  for (let [key, _value] of dataItems) {
+  while (dataQueue.length) {
+     let [key, _value] = dataQueue.shift()
 
     if ( _value === undefined ) continue;
 
     let t = blockSchema.schema[key]
+
+    if (t.multi && ! seenMulti[key]) {
+      seenMulti[key] = true
+      dataQueue = _value.map((v:any) => [key, v]).concat(dataQueue)
+      continue
+    }
+
     let [value, block] = ('block' in t && t.type !== 'list')
       ? _value
       : [_value, null]
