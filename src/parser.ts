@@ -26,6 +26,8 @@ export type ParseOptions = {
   vars?: Record<string,string>,
   /** If set to true, parsing will fail when a user tries to use a variable that does not exist. */
   failOnUndefinedVars?: boolean,
+  /** If set to true, config keys can be written in any case. */
+  caseInsensitiveKeys?: boolean,
 }
 
 export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
@@ -143,12 +145,22 @@ export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, 
 
   for (var i=0; i < statements.length; i++) {
     const s = statements[i]
-    const name = s.name
-    const t = blockSchema.schema[name]
+    let name_ = s.name
+    let t_ = blockSchema.schema[name_]
 
-    if ( ! t ) {
-      throw new ZamlError('user-error', s.pos, `No such config key: ${name}`)
+    if ( ! t_ && opts.caseInsensitiveKeys) {
+      var found = Object.keys(blockSchema.schema).find(n => !! n.toLowerCase().match(s.name.toLowerCase()))
+      if ( found && (t_ = blockSchema.schema[found]) ) {
+        name_ = found
+      }
     }
+    if ( ! t_ ) {
+      throw new ZamlError('user-error', s.pos, `No such config key: ${name_}`)
+    }
+
+    // const to make ts happy
+    const name = name_
+    const t = t_
 
     let parsedValue: any
 

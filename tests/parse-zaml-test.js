@@ -253,6 +253,19 @@ o.spec("ParseOptions", function () {
       o(err.pos.col).equals(9)
     }
   })
+
+  o("caseInsensitiveKeys", function () {
+    var result = parse(`
+      key 1
+      kEy 2
+      Key 3
+      KEY 4
+    `, '{keY|multi:num}', {
+      caseInsensitiveKeys: true
+    })
+
+    o(result).deepEquals({ keY: [1,2,3,4] })
+  })
 })
 
 o.spec("Syntactic features", function () {
