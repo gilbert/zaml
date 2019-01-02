@@ -130,7 +130,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
   return results
 }
 
-export function parseZaml (source: string, blockSchema: Schema.Block, statements: Statement[], opts: ParseOptions): ParseResult {
+export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, statements: Statement[], opts: ParseOptions): ParseResult {
   var result: any = blockSchema.type === 'array' ? [] : {}
 
   if (blockSchema.type === 'hash') {
@@ -191,7 +191,7 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
         for (let s2 of s.block) {
           if (t.block) {
             let str = withVars(s2.name, s2.pos, opts)
-            list.push(s2.block ? [str, parseZaml(source, t.block, s2.block, opts)] : [str])
+            list.push(s2.block ? [str, parseZaml(source, s2.argsPos[1], t.block, s2.block, opts)] : [str])
           }
           else if (s2.block) {
             throw new ZamlError('user-error', s2.argsPos[0], `The '${s.name}' list does not accept a block.`)
@@ -225,7 +225,7 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
       if (! s.block) {
         throw new ZamlError('user-error', s.pos, `Key '${s.name}' requires a block.`)
       }
-      parsedValue = parseZaml(source, t, s.block, opts)
+      parsedValue = parseZaml(source, s.argsPos[1], t, s.block, opts)
     }
     else if (t.type === 'tuple') {
       let args = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, k, pos) => {
@@ -279,7 +279,7 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
         throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
       }
       else {
-        parsedValue = [parsedValue, parseZaml(source, innerBlockSchema, s.block, opts)]
+        parsedValue = [parsedValue, parseZaml(source, s.argsPos[1], innerBlockSchema, s.block, opts)]
       }
     }
 
@@ -295,6 +295,19 @@ export function parseZaml (source: string, blockSchema: Schema.Block, statements
           `Duplicate key '${name}'. This key may only be specified once in this context.`)
       }
       result[name] = parsedValue
+    }
+  }
+
+  for (let name in blockSchema.schema) {
+    let schema = blockSchema.schema[name]
+
+    if (schema.req && ! result.hasOwnProperty(name)) {
+      var specifics = pos.i === 0 ? '' : ' in this block'
+      throw new ZamlError('user-error', pos, `[missing-key] The key '${name}' is required${specifics}; please specify it.`)
+    }
+    else if (schema.req && schema.multi && result[name].length === 0) {
+      var specifics = pos.i === 0 ? '' : ' in this block'
+      throw new ZamlError('user-error', pos, `[missing-key] The key '${name}' is required${specifics}. Please specify at least one.`)
     }
   }
 

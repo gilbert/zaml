@@ -1,4 +1,5 @@
 var o = require("ospec")
+var {checkError} = require('./helpers')
 var {parse} = require('../dist/index.js')
 
 o("basic types", function () {
@@ -122,6 +123,57 @@ o("multi list", function () {
   `, '{tags|multi:list}')
 
   o(result).deepEquals({ tags: [['a','b'], ['c']] })
+})
+
+o("req", function () {
+  try {
+    parse(`
+      xx hello
+    `, '{xx,yy|req}')
+    o("Should not be successful").equals(false)
+  }
+  catch (err) {
+    checkError(err, 'user-error', 1, 1, /yy/, /is required/)
+    o(err.message.match(/xx/)).equals(null)
+    o(err.message.match(/in this block/)).equals(null)
+    o(err.message.match(/\^/)).equals(null)
+  }
+})
+
+o("req block", function () {
+  try {
+    parse(`
+      person {
+      }
+    `, '{person:{name|req}}')
+    o("Should not be successful").equals(false)
+  }
+  catch (err) {
+    checkError(err, 'user-error', 2, 14, /name/, /in this block/, /is required/)
+  }
+})
+
+o("req array", function () {
+  try {
+    parse(`
+      person {
+      }
+    `, '{person:[name|req]}')
+    o("Should not be successful").equals(false)
+  }
+  catch (err) {
+    checkError(err, 'user-error', 2, 14, /name/, /in this block/, /is required/)
+  }
+})
+
+o("req multi", function () {
+  try {
+    parse(``, '{ user|multi|req: {name} }')
+    o("Should not be successful").equals(false)
+  }
+  catch (err) {
+    checkError(err, 'user-error', 1, 1, /user/, /is required/, /at least one/)
+  }
 })
 
 o("tuple", function () {

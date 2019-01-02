@@ -10,11 +10,17 @@ export function parse (source: string, schema: string | Schema.Block, options: P
   }
   try {
     var statements = lex(source, new Pos())
-    return parseZaml(source, typeof schema === 'string' ? parseSchema(schema) : schema, statements, options)
+    return parseZaml(source, new Pos(), typeof schema === 'string' ? parseSchema(schema) : schema, statements, options)
   }
   catch (e) {
     if (e instanceof ZamlError) {
-      e.addSource(source)
+
+      if (e.pos && e.pos.i === 0 && e.message.match('[missing key]')) {
+        // Don't add source to top-level required key errors.
+      }
+      else {
+        e.addSource(source)
+      }
     }
     throw e
   }

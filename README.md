@@ -469,6 +469,7 @@ After lexing, the parser uses the schema to determine how to parse the `rest` an
 
 ## Roadmap
 
+- New regular expression type
 - Allow inline `kv`?
 - Allow blocks on `kv`
 - New `json` type for arbitrarily-nested json-like data?
@@ -476,7 +477,6 @@ After lexing, the parser uses the schema to determine how to parse the `rest` an
 - Split `num` into `int` and `float`?
 - Pluggable validation?
 - Default values for tuple types?
-- Required fields?
 - Command line interface?
 
 Regarding the [online editor](https://gilbert.github.io/zaml/editor.html):
