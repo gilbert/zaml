@@ -16,7 +16,6 @@ export function stringify (data: any, blockSchema: Schema.Block, opts: Stringify
     : data
 
   for (let [key, _value] of dataItems) {
-    console.log("Serialize", key, _value)
 
     if ( _value === undefined ) continue;
 
