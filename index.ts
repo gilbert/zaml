@@ -1,5 +1,6 @@
 import {Pos, ZamlError, Schema} from './src/util'
 import {parseSchema} from './src/schema'
+import {stringify as str, StringifyOptions} from './src/stringify'
 import {lex, parseZaml, ParseOptions} from './src/parser'
 
 export {parseSchema} from './src/schema'
@@ -24,4 +25,8 @@ export function parse (source: string, schema: string | Schema.Block, options: P
     }
     throw e
   }
+}
+
+export function stringify (value: any, schema: string | Schema.Block, options: StringifyOptions={}) {
+  return str(value, typeof schema === 'string' ? parseSchema(schema) : schema, options) + '\n'
 }

@@ -389,7 +389,9 @@ function parseArgs (
       }
       continue
     }
-    throw new ZamlError('syntax-error', pos, unexp(c2, ' (did you forget a comma?)'))
+    if (pos.i < source.length) {
+      throw new ZamlError('syntax-error', pos, unexp(c2, ' (did you forget a comma?)'))
+    }
   }
 
   return args

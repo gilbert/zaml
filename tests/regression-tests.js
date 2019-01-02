@@ -23,4 +23,9 @@ o.spec("Regression tests", function () {
       }
     })
   })
+
+  o("list eof", function () {
+    var result = parse('nums 10, 20', '{nums:list}')
+    o(result).deepEquals({ nums: ['10','20'] })
+  })
 })
