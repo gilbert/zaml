@@ -69,6 +69,7 @@ function parseBlock (source: string, pos: Pos): Schema.Block {
       var type = readType(source, pos)
 
       if (key.multi) type.multi = true
+      if (key.req) type.req = true
       result.schema[key.name] = type
     }
 
@@ -119,9 +120,10 @@ function readKey (source: string, pos: Pos) {
   var key = source.substring(start, pos.i)
 
   let [name, ...attrs] = key.split('|')
-  var result: {name:string, multi?:true} = { name }
+  var result: {name:string, multi?:true, req?:true} = { name }
 
   if (attrs.indexOf('multi') >= 0) result.multi = true
+  if (attrs.indexOf('req') >= 0) result.req = true
   return result
 }
 

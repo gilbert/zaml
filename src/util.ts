@@ -7,7 +7,7 @@ export const reservedOps = /[\^&#@~`]/
 export const trailingWhitespace = /[ \t\n\r]*$/
 
 export namespace Schema {
-  type Common = { multi?: boolean }
+  type Common = { multi?: boolean, req?: boolean }
   type WithBlock = { block?: Block }
 
   export type Hash = { type: 'hash', schema: Record<string,t> }
