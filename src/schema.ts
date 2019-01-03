@@ -123,7 +123,7 @@ function readKey (source: string, pos: Pos) {
   var result: {name:string, multi?:true, req?:true} = { name }
 
   if (attrs.indexOf('multi') >= 0) result.multi = true
-  if (attrs.indexOf('req') >= 0) result.req = true
+  if (attrs.indexOf('req') >= 0 || attrs.indexOf('r') >= 0) result.req = true
   return result
 }
 
