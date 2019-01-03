@@ -14,7 +14,20 @@ o.spec("Schema parsing", function () {
     o(p('{a:str,b:bool, c: list , d :num, s}')).deepEquals({
       type: 'hash',
       schema: {
-        a: {type:'str'}, b: {type:'bool'}, c: {type:'list'}, d: {type:'num'}, s: {type:'str'}
+        a: {type:'str'}, b: {type:'bool'},
+        c: {type:'list', of: {type:'str'}},
+        d: {type:'num'}, s: {type:'str'}
+      }
+    })
+  })
+
+  o("list", function () {
+    o(p('{a:list(str), b:list, c:list(num)}')).deepEquals({
+      type: 'hash',
+      schema: {
+        a: { type: 'list', of: {type:'str'} },
+        b: { type: 'list', of: {type:'str'} },
+        c: { type: 'list', of: {type:'num'} },
       }
     })
   })
@@ -106,12 +119,15 @@ o.spec("Schema parsing", function () {
   })
 
   o("list block", function () {
-    o(p('{users:list{admin:bool}}')).deepEquals({
+    o(p('{users:list(str{admin:bool})}')).deepEquals({
       type: 'hash',
       schema: {
         users: {
           type: 'list',
-          block: { type: 'hash', schema: { admin:{type:'bool'} } }
+          of: {
+            type: 'str',
+            block: { type: 'hash', schema: { admin:{type:'bool'} } }
+          }
         }
       }
     })
@@ -205,9 +221,9 @@ o.spec("Schema parsing", function () {
     var result = p(`{
       x : {
         y : (  str ,  str ) ,
-        z  :  list  {
+        z  :  list ( str {
           e : bool
-        }
+        } )
       }
     }`)
     o(result).deepEquals({
@@ -219,7 +235,10 @@ o.spec("Schema parsing", function () {
             y: { type: 'tuple', schema: [{type:'str'}, {type:'str'}] },
             z: {
               type: 'list',
-              block: { type:'hash', schema: { e:{type:'bool'} } }
+              of: {
+                type: 'str',
+                block: { type:'hash', schema: { e:{type:'bool'} } }
+              }
             }
           }
         }

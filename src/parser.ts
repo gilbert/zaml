@@ -157,197 +157,33 @@ export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, 
 
   for (var i=0; i < statements.length; i++) {
     const s = statements[i]
-    let name_ = s.name
-    let t_ = blockSchema.schema[name_]
+    let name = s.name
+    let t = blockSchema.schema[name]
 
-    if ( ! t_ && opts.caseInsensitiveKeys) {
+    if ( ! t && opts.caseInsensitiveKeys) {
       var found = Object.keys(blockSchema.schema).find(n => !! n.toLowerCase().match(s.name.toLowerCase()))
-      if ( found && (t_ = blockSchema.schema[found]) ) {
-        name_ = found
+      if ( found && (t = blockSchema.schema[found]) ) {
+        name = found
       }
     }
-    if ( ! t_ ) {
-      throw new ZamlError('user-error', s.pos, `No such config key: ${name_}`)
-    }
-
-    // const to make ts happy
-    const name = name_
-    const t = t_
-
-    let parsedValue: any
-
-    if (t.type === 'num') {
-      let num = Number(withVars(s.args, s.pos, opts))
-      if (Number.isNaN(num)) {
-        throw new ZamlError('user-error', s.argsPos[0], `Invalid number: '${s.args}'`)
-      }
-      parsedValue = num
-    }
-    else if (t.type === 'str') {
-      parsedValue = withVars(s.args, s.pos, opts)
-    }
-    else if (t.type === 'enum') {
-      parsedValue = withVars(s.args, s.pos, opts)
-
-      if ( opts.caseInsensitiveEnums && t.options.indexOf(parsedValue) === -1) {
-        var found = t.options.find(o => !! o.toLowerCase().match(parsedValue.toLowerCase()))
-        if ( found ) {
-          parsedValue = found
-        }
-      }
-
-      if (t.options.indexOf(parsedValue) === -1) {
-        throw new ZamlError('user-error', s.argsPos[0], `Invalid value: '${parsedValue
-        }'\n  Value must be one of: ${t.options.join(', ')}`)
-      }
-    }
-    else if (t.type === 'bool') {
-      let val = withVars(s.args, s.pos, opts).toLowerCase()
-      if (val === '') {
-        throw new ZamlError('user-error', s.argsPos[0], `Boolean '${val} requires a value.'`)
-      }
-      if (val !== 'true' && val !== 'false') {
-        throw new ZamlError('user-error', s.argsPos[0],
-          `Invalid boolean: '${val}'. Value must be true or false.`)
-      }
-      parsedValue = val === 'true'
-    }
-    else if (t.type === 'list') {
-      if (s.block) {
-        // Block list
-        if (s.args.length > 0) {
-          throw new ZamlError('user-error', s.argsPos[0], listFormatError)
-        }
-
-        let list = []
-        for (let s2 of s.block) {
-          if (t.block) {
-            let str = withVars(s2.name, s2.pos, opts)
-            list.push(s2.block ? [str, parseZaml(source, s2.argsPos[1], t.block, s2.block, opts)] : [str])
-          }
-          else if (s2.block) {
-            throw new ZamlError('user-error', s2.argsPos[0], `The '${s.name}' list does not accept a block.`)
-          }
-          else {
-            list.push(
-              withVars(s2.name + (s2.args.length ? ` ${s2.args}` : ''), s2.pos, opts)
-            )
-          }
-        }
-        parsedValue = list
-      }
-      else {
-        // Inline list
-        parsedValue = parseArgs(source, s.argsPos[0], s.argsPos[1], opts)
-      }
-    }
-    else if (t.type === 'kv') {
-      var hash: Record<string,string> = {}
-      if (s.block) {
-        for (let s2 of s.block) {
-          if (s2.args === '') {
-            throw new ZamlError('user-error', s2.argsPos[0], `Hash key '${s2.name}' requires a value.`)
-          }
-          hash[ withVars(s2.name, s2.pos, opts)] = withVars(s2.args, s2.argsPos[0], opts)
-        }
-      }
-      parsedValue = hash
-    }
-    else if (t.type === 'hash' || t.type === 'array') {
-      if (! s.block) {
-        throw new ZamlError('user-error', s.pos, `Key '${s.name}' requires a block.`)
-      }
-      parsedValue = parseZaml(source, s.argsPos[1], t, s.block, opts)
-    }
-    else if (t.type === 'tuple') {
-      let args = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, k, pos) => {
-        if (k >= t.schema.length) {
-          let types = t.schema.map(t => t.type).join(' ')
-          throw new ZamlError('user-error', pos,
-            `Too many arguments; tuple only accepts ${types}`)
-        }
-        let t2 = t.schema[k]
-        //
-        // No need to transform with withVars at this point since
-        // parseArgs has already done so.
-        //
-        if (t2.type === 'num') {
-          return Number(arg)
-        }
-        else if (t2.type === 'str') {
-          return arg
-        }
-        else if (t2.type === 'bool') {
-          if (arg !== 'true' && arg !== 'false') {
-            throw new ZamlError('user-error', pos,
-              `Invalid boolean: '${arg}'. Value must be true or false.`)
-          }
-          return arg === 'true'
-        }
-        else {
-          throw new ZamlError('unexpected-error', pos,
-            `Invalid tuple type '${JSON.stringify(t2)}' for arg '${JSON.stringify(arg)}' (Shouldn't be possible)`)
-        }
-      })
-
-      if (args.length !== t.schema.length) {
-        let types = t.schema.map(t => t.type).join(', ')
-        throw new ZamlError('user-error', s.pos,
-          `Incorrect number of arguments. Key '${s.name}' expects ${types}.`)
-      }
-
-      parsedValue = args
-    }
-    else {
-      throw new ZamlError('unexpected-error', null, `Invalid type object (${JSON.stringify(t)})`)
+    if ( ! t ) {
+      throw new ZamlError('user-error', s.pos, `No such config key: ${name}`)
     }
 
-    //
-    // Handle blocks
-    //
-    if (BLOCKABLE_TYPES.indexOf(t.type) >= 0 && t.type !== 'list') {
-      let innerBlockSchema = ('block' in t) && t.block
-      if (! innerBlockSchema) {
-        if (s.block) {
-          throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
-        }
-      }
-      else if (! s.block) {
-        if (! ('req' in innerBlockSchema)) {
-          //
-          // A block is required if any one of its decendent's keys is required.
-          // Calculate and cache.
-          //
-          innerBlockSchema.req = calcBlockReq(innerBlockSchema)
-        }
-        if (innerBlockSchema.req === true) {
-          throw new ZamlError('user-error', s.pos, `Key ${s.name} requires a block.`)
-        }
-        else {
-          //
-          // Fill in an empty object for where a block would be.
-          // This makes the dev's life easier by providing a consistent data structure.
-          //
-          parsedValue = [parsedValue, {}]
-        }
-      }
-      else {
-        parsedValue = [parsedValue, parseZaml(source, s.argsPos[1], innerBlockSchema, s.block, opts)]
-      }
-    }
+    let value = parseZamlValue(source, s, t, opts)
 
     if (blockSchema.type === 'array') {
-      result.push([name, parsedValue])
+      result.push([name, value])
     }
     else if (t.multi) {
-      result[name].push(parsedValue)
+      result[name].push(value)
     }
     else {
       if (name in result) {
         throw new ZamlError('user-error', s.pos,
           `Duplicate key '${name}'. This key may only be specified once in this context.`)
       }
-      result[name] = parsedValue
+      result[name] = value
     }
   }
 
@@ -366,6 +202,180 @@ export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, 
 
   return result
 }
+
+
+function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOptions): any {
+  let parsedValue: any
+
+  if (t.type === 'num') {
+    let num = Number(withVars(s.args, s.pos, opts))
+    if (Number.isNaN(num)) {
+      throw new ZamlError('user-error', s.argsPos[0], `Invalid number: '${s.args}'`)
+    }
+    parsedValue = num
+  }
+  else if (t.type === 'str') {
+    parsedValue = withVars(s.args, s.pos, opts)
+  }
+  else if (t.type === 'enum') {
+    parsedValue = withVars(s.args, s.pos, opts)
+
+    if ( opts.caseInsensitiveEnums && t.options.indexOf(parsedValue) === -1) {
+      var found = t.options.find(o => !! o.toLowerCase().match(parsedValue.toLowerCase()))
+      if ( found ) {
+        parsedValue = found
+      }
+    }
+
+    if (t.options.indexOf(parsedValue) === -1) {
+      throw new ZamlError('user-error', s.argsPos[0], `Invalid value: '${parsedValue
+      }'\n  Value must be one of: ${t.options.join(', ')}`)
+    }
+  }
+  else if (t.type === 'bool') {
+    let val = withVars(s.args, s.pos, opts).toLowerCase()
+    if (val === '') {
+      throw new ZamlError('user-error', s.argsPos[0], `Boolean '${val} requires a value.'`)
+    }
+    if (val !== 'true' && val !== 'false') {
+      throw new ZamlError('user-error', s.argsPos[0],
+        `Invalid boolean: '${val}'. Value must be true or false.`)
+    }
+    parsedValue = val === 'true'
+  }
+  else if (t.type === 'list') {
+    if (s.block) {
+      // Block list
+      if (s.args.length > 0) {
+        throw new ZamlError('user-error', s.argsPos[0], listFormatError)
+      }
+
+      let list = []
+      for (let listItem of s.block) {
+        //
+        // Unlike the standard (configKey valuevaluevalue) format,
+        // a list item is entirely a value.
+        //
+        // Set args to include name so that parseZamlValue will include it
+        // with no additional logic.
+        //
+        listItem.args = `${listItem.name} ${listItem.args}`.trim()
+        list.push(parseZamlValue(source, listItem, t.of, opts))
+      }
+      parsedValue = list
+    }
+    else {
+      // Inline list
+      parsedValue = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, _k, pos) => {
+        var fauxArgStatement: Statement = {
+          args: arg,
+          pos: pos,
+          name: '', // This is not used
+          type: 'pre-statement',
+          argsPos: [pos, pos], // Hopefully we won't need the second one
+        }
+        return parseZamlValue(source, fauxArgStatement, t.of, opts)
+      })
+    }
+  }
+  else if (t.type === 'kv') {
+    var hash: Record<string,string> = {}
+    if (s.block) {
+      for (let s2 of s.block) {
+        if (s2.args === '') {
+          throw new ZamlError('user-error', s2.argsPos[0], `Hash key '${s2.name}' requires a value.`)
+        }
+        hash[ withVars(s2.name, s2.pos, opts)] = withVars(s2.args, s2.argsPos[0], opts)
+      }
+    }
+    parsedValue = hash
+  }
+  else if (t.type === 'hash' || t.type === 'array') {
+    if (! s.block) {
+      throw new ZamlError('user-error', s.pos, `Key '${s.name}' requires a block.`)
+    }
+    parsedValue = parseZaml(source, s.argsPos[1], t, s.block, opts)
+  }
+  else if (t.type === 'tuple') {
+    let args = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, k, pos) => {
+      if (k >= t.schema.length) {
+        let types = t.schema.map(t => t.type).join(' ')
+        throw new ZamlError('user-error', pos,
+          `Too many arguments; tuple only accepts ${types}`)
+      }
+      let t2 = t.schema[k]
+      //
+      // No need to transform with withVars at this point since
+      // parseArgs has already done so.
+      //
+      if (t2.type === 'num') {
+        return Number(arg)
+      }
+      else if (t2.type === 'str') {
+        return arg
+      }
+      else if (t2.type === 'bool') {
+        if (arg !== 'true' && arg !== 'false') {
+          throw new ZamlError('user-error', pos,
+            `Invalid boolean: '${arg}'. Value must be true or false.`)
+        }
+        return arg === 'true'
+      }
+      else {
+        throw new ZamlError('unexpected-error', pos,
+          `Invalid tuple type '${JSON.stringify(t2)}' for arg '${JSON.stringify(arg)}' (Shouldn't be possible)`)
+      }
+    })
+
+    if (args.length !== t.schema.length) {
+      let types = t.schema.map(t => t.type).join(', ')
+      throw new ZamlError('user-error', s.pos,
+        `Incorrect number of arguments. Key '${s.name}' expects ${types}.`)
+    }
+
+    parsedValue = args
+  }
+  else {
+    throw new ZamlError('unexpected-error', null, `Invalid type object (${JSON.stringify(t)})`)
+  }
+
+  //
+  // Handle blocks
+  //
+  if (BLOCKABLE_TYPES.indexOf(t.type) >= 0 && t.type !== 'list') {
+    let innerBlockSchema = ('block' in t) && t.block
+    if (! innerBlockSchema) {
+      if (s.block) {
+        throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
+      }
+    }
+    else if (! s.block) {
+      if (! ('req' in innerBlockSchema)) {
+        //
+        // A block is required if any one of its decendent's keys is required.
+        // Calculate and cache.
+        //
+        innerBlockSchema.req = calcBlockReq(innerBlockSchema)
+      }
+      if (innerBlockSchema.req === true) {
+        throw new ZamlError('user-error', s.pos, `Key ${s.name} requires a block.`)
+      }
+      else {
+        //
+        // Fill in an empty object for where a block would be.
+        // This makes the dev's life easier by providing a consistent data structure.
+        //
+        parsedValue = [parsedValue, {}]
+      }
+    }
+    else {
+      parsedValue = [parsedValue, parseZaml(source, s.argsPos[1], innerBlockSchema, s.block, opts)]
+    }
+  }
+
+  return parsedValue
+}
+
 
 function parseQuotedString (source: string, pos: Pos, end: Pos): string {
   var start = pos.copy()

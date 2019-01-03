@@ -98,18 +98,36 @@ o("list", function () {
       three
     }
     inline x, y , z
-  `, {
-    type: 'hash',
-    schema: {
-      items: { type: 'list' },
-      inline: { type: 'list' },
-    }
-  })
+  `, '{items:list(str),inline:list}')
 
   o(result).deepEquals({
     items: ['one', 'two', 'three'],
     inline: ['x', 'y', 'z'],
   })
+})
+
+o("list num", function () {
+  var result = parse(`
+    ids 10, 20
+  `, '{ids:list(num)}')
+  o(result).deepEquals({ ids: [10,20] })
+})
+
+o("list enum", function () {
+  var result = parse(`
+    math x, x, y
+  `, '{math:list(enum(x,y))}')
+  o(result).deepEquals({ math: ['x','x','y'] })
+
+  try {
+    var result = parse(`
+      math x, y, z
+    `, '{math:list(enum(x,y))}')
+    o("Should not be successful").equals(false)
+  }
+  catch (err) {
+    checkError(err, 'user-error', 2, 18, /invalid value/i, /'z'/, /must/)
+  }
 })
 
 o("list block", function () {
@@ -121,21 +139,10 @@ o("list block", function () {
       }
       carl
     }
-  `, {
-    type: 'hash',
-    schema: {
-      users: {
-        type: 'list',
-        block: {
-          type: 'hash',
-          schema: { admin: {type: 'bool'} }
-        }
-      },
-    }
-  })
+  `, '{users:list(str{admin:bool})}')
 
   o(result).deepEquals({
-    users: [['andy'], ['beth', {admin: true}], ['carl']]
+    users: [['andy', {}], ['beth', {admin: true}], ['carl', {}]]
   })
 })
 
@@ -183,7 +190,7 @@ o("req", function () {
   }
 })
 
-o("req block", function () {
+o("req in block", function () {
   try {
     parse(`
       person {

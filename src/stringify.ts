@@ -1,15 +1,14 @@
 import { Schema } from './util'
 
 export type StringifyOptions = {
-  indentDepth?: number
+  indentDepth: number
 }
 
 export function stringify (data: any, blockSchema: Schema.Block, opts: StringifyOptions): string {
   const parts: string[] = []
 
-  const depth = opts.indentDepth || 0
-  const i_1 = indentation(depth)
   const seenMulti: Record<string,boolean> = {}
+  const ind = indentation(opts.indentDepth)
 
   let dataQueue = blockSchema.type === 'hash'
     ? Object.keys(blockSchema.schema).map(configKey => [configKey, data[configKey]])
@@ -28,73 +27,79 @@ export function stringify (data: any, blockSchema: Schema.Block, opts: Stringify
       continue
     }
 
-    let [value, block] = ('block' in t && t.type !== 'list')
-      ? _value
-      : [_value, null]
+    let valueParts = stringifyValue(_value, t, opts)
+    valueParts[0] = `${ind}${key} ${valueParts[0]}`
 
-    if (
-      t.type === 'num' ||
-      t.type === 'str' ||
-      t.type === 'bool' ||
-      t.type === 'enum'
-    ) {
-      parts.push(i_1 + `${key} ${value}`)
-    }
-    else if (t.type === 'list') {
-      let i_2 = indentation(depth + 1)
-
-      parts.push(i_1 + `${key} {`)
-
-      if (Array.isArray(value)) {
-        for (let item of value) {
-
-          if (t.block) {
-            let [itemValue, itemBlock] = item
-            parts.push(i_2 + itemValue)
-            if (itemBlock) {
-              addBlockBracket(parts)
-              parts.push(stringify(itemBlock, t.block, indent(depth+1, opts)))
-              parts.push(i_2 + '}')
-            }
-          }
-          else {
-            parts.push(i_2 + item)
-          }
-        }
-      }
-      parts.push(i_1 + '}')
-    }
-    else if (t.type === 'kv') {
-      let i_2 = indentation(depth + 1)
-      parts.push(i_1 + `${key} {`)
-
-      for (let key in value) {
-        parts.push(i_2 + `${key} ${value[key]}`)
-      }
-
-      parts.push(i_1 + '}')
-    }
-    else if (t.type === 'tuple') {
-      parts.push(i_1 + `${key} ${value.join(', ')}`)
-    }
-    else if (t.type === 'hash' || t.type === 'array') {
-      parts.push(i_1 + `${key} {`)
-
-      parts.push(stringify(value, t, indent(depth, opts)))
-
-      parts.push(i_1 + '}')
-    }
-
-    if ('block' in t && t.block && block) {
-      addBlockBracket(parts)
-
-      parts.push(stringify(block, t.block, indent(depth, opts)))
-
-      parts.push(i_1 + '}')
-    }
+    parts.push(...valueParts)
   }
 
   return parts.join('\n')
+}
+
+function stringifyValue (_value: any, t: Schema.t, opts: StringifyOptions) {
+  const parts: string[] = []
+  const ind = indentation(opts.indentDepth)
+
+  const [value, block] = ('block' in t)
+    ? _value
+    : [_value, null]
+
+  if (
+    t.type === 'num' ||
+    t.type === 'str' ||
+    t.type === 'bool' ||
+    t.type === 'enum'
+  ) {
+    parts.push(value)
+  }
+  else if (t.type === 'list') {
+    parts.push('{')
+
+    if (Array.isArray(value)) {
+      //
+      // Clear out indentation since we will add it ourselves
+      //
+      let opts2 = {...opts, indentDepth: 0}
+      let list_ind = indentation(opts.indentDepth+1)
+
+      for (let item of value) {
+        parts.push(
+          ...stringifyValue(item, t.of, opts2).map(line => `${list_ind}${line}`)
+        )
+      }
+    }
+    parts.push(ind + '}')
+  }
+  else if (t.type === 'kv') {
+    let ind_2 = indentation(opts.indentDepth + 1)
+    parts.push(`{`)
+
+    for (let key in value) {
+      parts.push(ind_2 + `${key} ${value[key]}`)
+    }
+
+    parts.push(ind + '}')
+  }
+  else if (t.type === 'tuple') {
+    parts.push(value.join(', '))
+  }
+  else if (t.type === 'hash' || t.type === 'array') {
+    parts.push('{')
+
+    parts.push(stringify(value, t, indent(1, opts)))
+
+    parts.push(ind + '}')
+  }
+
+  if ('block' in t && t.block && block) {
+    addBlockBracket(parts)
+
+    parts.push(stringify(block, t.block, indent(1, opts)))
+
+    parts.push(ind + '}')
+  }
+
+  return parts
 }
 
 function indentation (n: number) {
@@ -105,8 +110,8 @@ function indentation (n: number) {
   return result
 }
 
-function indent (depth: number, opts: StringifyOptions) {
-  return { ...opts, indentDepth: depth+1 }
+function indent (mod: number, opts: StringifyOptions) {
+  return { ...opts, indentDepth: opts.indentDepth+mod }
 }
 
 function addBlockBracket (parts: string[]) {

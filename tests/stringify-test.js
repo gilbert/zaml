@@ -102,7 +102,7 @@ c C
       user: ['alice', {
         admin: true
       }]
-    }, '{user:str{admin:bool}}')
+    }, '{ user:str{admin:bool} }')
 
     o(result).deepEquals(
 `user alice {
@@ -119,7 +119,7 @@ c C
         ['y', { special: true }],
         ['z'],
       ]
-    }, '{letters:list{special:bool}}')
+    }, '{ letters:list(str {special:bool}) }')
 
     o(result).deepEquals(
 `letters {

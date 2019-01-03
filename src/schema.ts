@@ -9,6 +9,7 @@ import {
   Schema,
   ZamlError,
   validTypes,
+  LISTABLE_TYPES,
   BLOCKABLE_TYPES,
   basicTypeFromName,
   whitespace,
@@ -66,7 +67,12 @@ function parseBlock (source: string, pos: Pos): Schema.Block {
           `Duplicate key: "${key.name}" has already been defined in this context.`)
       }
 
-      var type = readType(source, pos)
+      let c = source[pos.i]
+      if (c === '{' || c === '[' || c === '(') {
+        throw new ZamlError('syntax-error', pos, unexp(c, '. Did you forget a colon?'))
+      }
+
+      var type = readType(source, pos, ':')
 
       if (key.multi) type.multi = true
       if (key.req) type.req = true
@@ -141,126 +147,152 @@ function readEnum (source: string, pos: Pos) {
   return source.substring(start, pos.i).trim()
 }
 
-function readType (source: string, pos: Pos): Schema.t {
-  let c = source[pos.i]
+function readType (source: string, pos: Pos, targetChar: null | string): Schema.t {
+  const c = source[pos.i]
 
-  if (pos.i >= source.length || c === '}' || c === ']' || c === ',') {
+  if (pos.i >= source.length || c === '}' || c === ']' || c === ')' || c === ',') {
     // At this point we've reached the end without
     // a specified type. Return the default.
     return { type: 'str' }
   }
 
-  if (c === '{' || c === '[' || c === '(') {
-    throw new ZamlError('syntax-error', pos, unexp(c, '. Did you forget a colon?'))
+  // if (c !== nextChar && (c === '{' || c === '[' || c === '(')) {
+  //   throw new ZamlError('syntax-error', pos, unexp(c, '. Did you forget a colon?'))
+  // }
+
+  if (targetChar !== null) {
+    if (c !== targetChar) {
+      throw new ZamlError('syntax-error', pos, unexp(c))
+    }
+
+    pos.newcol() // skip targetChar
+    while (pos.skipWhitespace(source)) {}
   }
 
-  if (c === ':') {
+  const c2 = source[pos.i]
+
+  if (c2 === '{' || c2 === '[') {
+    return parseBlock(source, pos)
+  }
+
+  if (c2 === '(') {
+    var tuplePos = pos.copy()
+    pos.newcol() // Skip open parens
+
+    while (pos.skipWhitespace(source)) {}
+
+    var types = readTupleTypes(source, pos, tuplePos)
+
+    if (types.length < 2) {
+      throw new ZamlError('user-error', tuplePos,
+        `A tuple requires at least two types (${types.length ? 'onle one was' : 'none were'} provided).`)
+    }
+
+    while (pos.skipWhitespace(source)) {}
+
+    if (source[pos.i] === '{') {
+      let block = parseBlock(source, pos)
+      return { type: 'tuple', schema: types, block }
+    }
+    else {
+      return { type: 'tuple', schema: types }
+    }
+  }
+
+  let typenamePos = pos.copy()
+  let {name: typename} = readKey(source, pos)
+
+  while (pos.skipWhitespace(source)) {}
+
+  if (validTypes.indexOf(typename) === -1) {
+    throw new ZamlError('user-error', typenamePos, `No such type: '${typename}'`)
+  }
+
+  if (typename === 'enum') {
+    if (source[pos.i] !== '(') {
+      throw new ZamlError('syntax-error', pos, unexp(source[pos.i], ' (Did you forget a parenthesis?)'))
+    }
     pos.newcol()
     while (pos.skipWhitespace(source)) {}
 
-    let c2 = source[pos.i]
+    var options: string[] = []
 
-    if (c2 === '{' || c2 === '[') {
-      return parseBlock(source, pos)
-    }
+    while (pos.i < source.length) {
+      var option = readEnum(source, pos)
 
-    if (c2 === '(') {
-      var tuplePos = pos.copy()
-      pos.newcol() // Skip open parens
-
-      while (pos.skipWhitespace(source)) {}
-
-      var types = readTupleTypes(source, pos, tuplePos)
-
-      if (types.length < 2) {
-        throw new ZamlError('user-error', tuplePos,
-          `A tuple requires at least two types (${types.length ? 'onle one was' : 'none were'} provided).`)
+      if (option !== '') {
+        options.push(option)
       }
-
       while (pos.skipWhitespace(source)) {}
 
-      if (source[pos.i] === '{') {
-        let block = parseBlock(source, pos)
-        return { type: 'tuple', schema: types, block }
+      if (source[pos.i] === ',') {
+        pos.newcol()
+        while (pos.skipWhitespace(source)) {}
+      }
+      else if (source[pos.i] === ')') {
+        pos.newcol()
+        while (pos.skipWhitespace(source)) {}
+        break
       }
       else {
-        return { type: 'tuple', schema: types }
+        throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
       }
     }
 
-    let typenamePos = pos.copy()
-    let {name: typename} = readKey(source, pos)
+    if (options.length === 0) {
+      throw new ZamlError('user-error', typenamePos, 'An enum type must have at least one option.')
+    }
 
+    if (source[pos.i] === '{' || source[pos.i] === '[') {
+      let block = parseBlock(source, pos)
+      return { type: typename, options, block } as Schema.t
+    }
+    else {
+      return { type: typename, options } as Schema.t
+    }
+  }
+  else if (typename === 'list') {
+    if (source[pos.i] !== '(') {
+      //
+      // A list type without parenthesis is implicitly a list of str
+      //
+      return { type: 'list', of: {type: 'str'} }
+    }
+    pos.newcol()
     while (pos.skipWhitespace(source)) {}
 
-    if (validTypes.indexOf(typename) === -1) {
-      throw new ZamlError('user-error', typenamePos, `No such type: '${typename}'`)
+    let ofTypePos = pos.copy()
+    let ofType = readType(source, pos, null)
+
+    if (LISTABLE_TYPES.indexOf(ofType.type) === -1) {
+      throw new ZamlError('user-error', ofTypePos, `A '${ofType.type}' type may not be within a list.`)
     }
 
-    if (typename === 'enum') {
-      if (source[pos.i] !== '(') {
-        throw new ZamlError('syntax-error', pos, unexp(source[pos.i], ' (Did you forget a parenthesis?)'))
-      }
-      pos.newcol()
-      while (pos.skipWhitespace(source)) {}
-
-      var options: string[] = []
-
-      while (pos.i < source.length) {
-        var option = readEnum(source, pos)
-
-        if (option !== '') {
-          options.push(option)
-        }
-        while (pos.skipWhitespace(source)) {}
-
-        if (source[pos.i] === ',') {
-          pos.newcol()
-          while (pos.skipWhitespace(source)) {}
-        }
-        else if (source[pos.i] === ')') {
-          pos.newcol()
-          while (pos.skipWhitespace(source)) {}
-          break
-        }
-        else {
-          throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
-        }
-      }
-
-      if (options.length === 0) {
-        throw new ZamlError('user-error', typenamePos, 'An enum type must have at least one option.')
-      }
-
-      if (source[pos.i] === '{' || source[pos.i] === '[') {
-        let block = parseBlock(source, pos)
-        return { type: typename, options, block } as Schema.t
-      }
-      else {
-        return { type: typename, options } as Schema.t
-      }
+    if (source[pos.i] !== ')') {
+      throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
     }
+    pos.newcol()
+    while (pos.skipWhitespace(source)) {}
 
-    let c3 = source[pos.i]
+    return { type: 'list', of: ofType }
+  }
 
-    if (c3 === '{' || c3 === '[') {
-      if (BLOCKABLE_TYPES.indexOf(typename) === -1) {
-        throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
-      }
+  let c3 = source[pos.i]
+
+  if (c3 === '{' || c3 === '[') {
+    if (BLOCKABLE_TYPES.indexOf(typename) === -1) {
+      throw new ZamlError('user-error', pos, `A '${typename}' type may not have a block.`)
+    }
+    else {
       let block = parseBlock(source, pos)
       return { type: typename, block } as Schema.t
     }
-    else if (c3 === ',' || c3 === '}' || c3 === ']' || pos.i === source.length) {
-      return { type: typename } as Schema.t
-    }
-
-    throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
   }
-  else {
-    throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
+  else if (c3 === ',' || c3 === '}' || c3 === ')' || c3 === ']' || pos.i === source.length) {
+    return { type: typename } as Schema.t
   }
 
-  return { type: 'str' }
+  throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
 }
 
 function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.BasicType[] {

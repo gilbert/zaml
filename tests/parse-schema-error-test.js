@@ -81,6 +81,53 @@ o.spec("Schema Parse Errors", function () {
     }
   })
 
+  o("invalid list type", function () {
+    try {
+      p(`{stuff:list({x})}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'user-error', 1, 13, /within a list/i, /'hash'/i)
+    }
+  })
+
+  o("list block", function () {
+    try {
+      p(`{cats:list{x}}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 11, /unexpected/i, /"\{"/i)
+    }
+    try {
+      p(`{cats:list(str){x}}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 16, /unexpected/i, /"\{"/i)
+    }
+  })
+
+  o("list comma", function () {
+    try {
+      p(`{cats:list(str,str)}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 15, /unexpected/i, /","/i)
+    }
+  })
+
+  o("list whitespace", function () {
+    try {
+      p(`{cats:list(str str)}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 16, /unexpected/i, /"s"/i)
+    }
+  })
+
   o("empty and single-member tuples", function () {
     try {
       p(`{project:()}`)
@@ -125,6 +172,16 @@ o.spec("Schema Parse Errors", function () {
     }
     catch (err) {
       checkError(err, 'syntax-error', 1, 19, /unexpected/i, /"\}"/i,)
+    }
+  })
+
+  o("missing list paren", function () {
+    try {
+      p(`{project:list(num}`)
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 18, /unexpected/i, /"\}"/)
     }
   })
 

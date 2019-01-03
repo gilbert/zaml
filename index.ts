@@ -1,6 +1,6 @@
 import {Pos, ZamlError, Schema} from './src/util'
 import {parseSchema} from './src/schema'
-import {stringify as str, StringifyOptions} from './src/stringify'
+import {stringify as str, StringifyOptions as StringifyOptionsInternal} from './src/stringify'
 import {lex, parseZaml, ParseOptions} from './src/parser'
 
 export {parseSchema} from './src/schema'
@@ -27,6 +27,13 @@ export function parse (source: string, schema: string | Schema.Block, options: P
   }
 }
 
+export type StringifyOptions = {
+  indentDepth?: number
+}
+
 export function stringify (value: any, schema: string | Schema.Block, options: StringifyOptions={}) {
-  return str(value, typeof schema === 'string' ? parseSchema(schema) : schema, options) + '\n'
+  var opts: StringifyOptionsInternal = {
+    indentDepth: options.indentDepth || 0
+  }
+  return str(value, typeof schema === 'string' ? parseSchema(schema) : schema, opts) + '\n'
 }
