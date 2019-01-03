@@ -16,7 +16,7 @@ export function stringify (data: any, blockSchema: Schema.Block, opts: Stringify
     : data
 
   while (dataQueue.length) {
-     let [key, _value] = dataQueue.shift()
+    let [key, _value] = dataQueue.shift()
 
     if ( _value === undefined ) continue;
 

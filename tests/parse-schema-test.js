@@ -189,7 +189,7 @@ o.spec("Schema parsing", function () {
     })
   })
 
-  o("required", function () {
+  o("required key", function () {
     var result = p(`{x|req,y|r:num,z}`)
     o(result).deepEquals({
       type: 'hash',

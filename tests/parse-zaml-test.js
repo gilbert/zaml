@@ -16,6 +16,40 @@ o("basic types", function () {
   o(result.b).equals(true)
 })
 
+o("str block", function () {
+  var result = parse(`
+    x XX {
+      y YY
+    }
+  `, '{x:str{y}}')
+
+  o(result).deepEquals({
+    x: ['XX', {
+      y: 'YY'
+    }]
+  })
+})
+
+o("str block no block", function () {
+  var result = parse(`
+    x XX
+  `, '{x:str{y}}')
+
+  o(result).deepEquals({
+    x: ['XX', {}]
+  })
+})
+
+o("str block empty block", function () {
+  var result = parse(`
+    x XX {}
+  `, '{x:str{y}}')
+
+  o(result).deepEquals({
+    x: ['XX', {}]
+  })
+})
+
 o("array block", function () {
   var result = parse(`
     one 10
@@ -176,6 +210,33 @@ o("req multi", function () {
   }
 })
 
+o("req block", function () {
+  try {
+    parse(`
+      user bob
+    `, '{ user: str {name|req} }')
+    o("Should not be successful").equals(false)
+  }
+  catch (err) {
+    checkError(err, 'user-error', 2, 7, /user/, /requires a block/)
+  }
+})
+
+o("req block descendent", function () {
+  var result = parse(`
+    user carly
+  `, `{
+    user: str {
+      special: bool {
+        nested|req
+      }
+    }
+  }`)
+  o(result).deepEquals({
+    user: ['carly', {}]
+  })
+})
+
 o("tuple", function () {
   var result = parse(`
     redirect 301, /old, /new
@@ -195,6 +256,16 @@ o("tuple block", function () {
 
   o(result).deepEquals({
     redirect: [[301, '/old', '/new'], { enabled: false }]
+  })
+})
+
+o("tuple block no block", function () {
+  var result = parse(`
+    pair 101, 202
+  `, '{pair:(num,num){nothing:bool}}')
+
+  o(result).deepEquals({
+    pair: [[101, 202], {}]
   })
 })
 

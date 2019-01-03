@@ -10,8 +10,8 @@ export namespace Schema {
   type Common = { multi?: boolean, req?: boolean }
   type WithBlock = { block?: Block }
 
-  export type Hash = { type: 'hash', schema: Record<string,t> }
-  export type Array = { type: 'array', schema: Record<string,t> }
+  export type Hash  = { type: 'hash',  schema: Record<string,t>, req?: boolean }
+  export type Array = { type: 'array', schema: Record<string,t>, req?: boolean }
 
   export type Block = Hash | Array
 

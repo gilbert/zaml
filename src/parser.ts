@@ -295,10 +295,31 @@ export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, 
     //
     // Handle blocks
     //
-    if (s.block && BLOCKABLE_TYPES.indexOf(t.type) >= 0 && t.type !== 'list') {
+    if (BLOCKABLE_TYPES.indexOf(t.type) >= 0 && t.type !== 'list') {
       let innerBlockSchema = ('block' in t) && t.block
       if (! innerBlockSchema) {
-        throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
+        if (s.block) {
+          throw new ZamlError('user-error', s.argsPos[1], `Key ${s.name} does not accept a block.`)
+        }
+      }
+      else if (! s.block) {
+        if (! ('req' in innerBlockSchema)) {
+          //
+          // A block is required if any one of its decendent's keys is required.
+          // Calculate and cache.
+          //
+          innerBlockSchema.req = calcBlockReq(innerBlockSchema)
+        }
+        if (innerBlockSchema.req === true) {
+          throw new ZamlError('user-error', s.pos, `Key ${s.name} requires a block.`)
+        }
+        else {
+          //
+          // Fill in an empty object for where a block would be.
+          // This makes the dev's life easier by providing a consistent data structure.
+          //
+          parsedValue = [parsedValue, {}]
+        }
       }
       else {
         parsedValue = [parsedValue, parseZaml(source, s.argsPos[1], innerBlockSchema, s.block, opts)]
@@ -413,6 +434,13 @@ function readWord (source: string, pos: Pos): string {
     pos.newcol()
   }
   return source.substring(start, pos.i)
+}
+
+function calcBlockReq (block: Schema.Block): boolean {
+  return Object.keys(block.schema).reduce((acc, key) => {
+    if (acc) return acc
+    return !! block.schema[key].req
+  }, false)
 }
 
 function withVars (str: string, origin: Pos, opts: ParseOptions) {
