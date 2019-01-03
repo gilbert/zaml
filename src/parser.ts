@@ -28,6 +28,8 @@ export type ParseOptions = {
   failOnUndefinedVars?: boolean,
   /** If set to true, config keys can be written in any case. */
   caseInsensitiveKeys?: boolean,
+  /** If set to true, enum values can be written in any case. */
+  caseInsensitiveEnums?: boolean,
 }
 
 export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
@@ -186,6 +188,14 @@ export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, 
     }
     else if (t.type === 'enum') {
       parsedValue = withVars(s.args, s.pos, opts)
+
+      if ( opts.caseInsensitiveEnums && t.options.indexOf(parsedValue) === -1) {
+        var found = t.options.find(o => !! o.toLowerCase().match(parsedValue.toLowerCase()))
+        if ( found ) {
+          parsedValue = found
+        }
+      }
+
       if (t.options.indexOf(parsedValue) === -1) {
         throw new ZamlError('user-error', s.argsPos[0], `Invalid value: '${parsedValue
         }'\n  Value must be one of: ${t.options.join(', ')}`)

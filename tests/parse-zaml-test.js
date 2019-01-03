@@ -337,6 +337,17 @@ o.spec("ParseOptions", function () {
 
     o(result).deepEquals({ keY: [1,2,3,4] })
   })
+
+  o("caseInsensitiveEnums", function () {
+    var result = parse(`
+      type HuMan
+      type biRd
+    `, '{type|multi:enum(Human,Bird)}', {
+      caseInsensitiveEnums: true
+    })
+
+    o(result).deepEquals({ type: ['Human','Bird'] })
+  })
 })
 
 o.spec("Syntactic features", function () {
