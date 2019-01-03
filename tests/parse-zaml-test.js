@@ -16,6 +16,15 @@ o("basic types", function () {
   o(result.b).equals(true)
 })
 
+o("bool case insensitive", function () {
+  var result = parse(`
+    t TruE
+    f False
+  `, '{t:bool,f:bool}')
+
+  o(result).deepEquals({ t: true, f: false })
+})
+
 o("str block", function () {
   var result = parse(`
     x XX {

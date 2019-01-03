@@ -202,7 +202,7 @@ export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, 
       }
     }
     else if (t.type === 'bool') {
-      let val = withVars(s.args, s.pos, opts)
+      let val = withVars(s.args, s.pos, opts).toLowerCase()
       if (val === '') {
         throw new ZamlError('user-error', s.argsPos[0], `Boolean '${val} requires a value.'`)
       }
