@@ -100,10 +100,17 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
     if (pos.i === source.length) { argsPosEnd = pos.copy() }
 
     let hasBlock = source[argsPosEnd.i-1] === '{'
+    let hasEmptyBlock = source[argsPosEnd.i-2] === '{' && source[argsPosEnd.i-1] === '}'
+
     if (hasBlock) {
-      // Backtrack
+      // Remove block bracket from args territory
       argsPosEnd.i -= 1
       argsPosEnd.col -= 1
+    }
+    else if (hasEmptyBlock) {
+      // Remove block brackets from args territory
+      argsPosEnd.i -= 2
+      argsPosEnd.col -= 2
     }
 
     let args = source.substring(argsPosStart.i, argsPosEnd.i).replace(trailingWhitespace, '')
@@ -125,6 +132,9 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
           `Expected end bracket '}', got ${JSON.stringify(source[pos.i])} instead (shouldn't be possible?)`)
       }
       pos.newcol()
+    }
+    else if (hasEmptyBlock) {
+      s.block = []
     }
 
     results.push(s)

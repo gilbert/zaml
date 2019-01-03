@@ -291,4 +291,14 @@ o.spec("Syntactic features", function () {
 
     o(result).deepEquals({ items: ['a','c','e'] })
   })
+
+  o("empty block", function () {
+    var result = parse(`
+      h {}
+      a {}
+      decoy 10
+    `, '{h:{x,y},a:[x,y],decoy}')
+
+    o(result).deepEquals({ h: {}, a: [], decoy: '10' })
+  })
 })
