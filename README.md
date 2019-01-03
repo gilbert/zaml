@@ -199,12 +199,30 @@ project {
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMADgJwPYCsYQAuywhAloQDYwA0WZAbgoTMgEbbaUC+3IN4bAFdMEGChBY8BQgAJgAHQB2s2eSoxZAWQCesgMoB3GDDkBBdOmWr6TFmsxCYy7spDcgA)
 
-### list
-
-A `list` is *always* sequence of `str`. A user can write lists either inline or with a block (but not both).
+You can also enhance basic types with blocks. This lets you specify cleaner config:
 
 ```zaml
-# if your schema is {tags:list}
+# if your schema is { page|multi: str {hide:bool} }
+
+page index.html
+page wip.html {
+  hide true
+}
+
+#=> { "page": [
+#     ["index.html", {}],
+#     ["index.html", { "hide": true }],
+#   ] }
+```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABABwQcxgHzgFcAbAFwEtl0wyAndYKCgExmQCMB7LkgX3R8QAGnBcidCDBQhsedBQB2bAB4A6KGTgkAOorkx0AdwqYNWkoz3p0zNunpEYevnpB8gA)
+
+### list
+
+A `list` is a sequence of values. A user can write lists either inline or with a block (but not both).
+
+```zaml
+# if your schema is {tags:list} OR {tags:list(str)}
 
 # Inline example
 tags library, npm, with spaces, js
@@ -222,10 +240,21 @@ tags {
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgg5mZAbASzHQF8QAacAewFcAnCGFEAYgAIBJAO0K5jZgAPBHAAOeGAB0u7TDjaEARnQR0Anmy6i4bSSADuBdFDZhRCRmD1sAVla7T2AITxUIAawHCxE6XLBswNJsCgTKqmrBmtpRhsam5pZRdtIk0iAkQA)
 
-You can also enhance your list by making a block available to each list item.
+You can specify the type of items in your list by specifying it in parethesis. When no item type is specified, it is defaulted to `str`, resulting in `list(str)`.
 
 ```zaml
-# if your schema is {users:list{admin:bool}}
+# if your schema is { fav_nums:list(num) }
+fav_nums 10, 20
+
+#=> { "fav-nums": [10, 20] }
+```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAMwQNwPoB2ArnGMgDYCWYALgBTFwCU6AviADTgD2RAThBgoQ2fIzDoAjAAYO6AEzSAOgRCsgA)
+
+The list item type may also be enhanced with a block. Note that you **must** specify an item type when you do!
+
+```zaml
+# if your schema is { users:list(str { admin:bool }) }
 
 users {
   andy
@@ -235,10 +264,10 @@ users {
   carl
 }
 
-#=> { "users": [["andy"], ["beth", {admin: true}], ["carl"]] }
+#=> { "users": [["andy", {}], ["beth", {admin: true}], ["carl", {}]] }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMArmGAnMyA2AlmAC7AIAmchAdsgEYD2j+AvqyADTiPrYQwUITDjAACYAB0aYsQhoUAntNn0YJKBJWy5VWmJLZ0Mba20QE2fNLM0QrIA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAVzDATmZAGwEswAXACnN2AQBM5iA7ZAIwHt3CBfASnW4gANOHaZcEGChDY8YdMAA6TdOgRM6AT2WrWMMlAU7Vahs3RlcmGMe7GICXIWV2mIbkA)
 
 Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each list item:
 
@@ -274,6 +303,34 @@ env production {
 #      [["production"], { "require": ["lib-3"] }]
 #    ]}
 ```
+
+### key|req
+
+Appending the `|req` attribute to a key will make that key requried.
+
+```zaml
+# if your schema is { access_token|req:str }
+
+access_token abc123
+```
+
+[Open that in your browser](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAiEZjAfQBcB7AaxgDsAfAJxgEdkxCb0BfEAGnGIFcacKEFhx4iZSpgBGEAIwAmAMwAdCiDZA) and see what happens when you remove the `access_token` line.
+
+If you specify a `|req` within a basic-type hash block, it will make that block required.
+
+```zaml
+# if your schema is { table: str {id:enum(INT,VARCHAR)} }
+
+# This is invalid! It requires a block
+# table users
+
+# This works
+table users {
+  id INT
+}
+```
+
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAFwQIwDYzLpiYBO6wAlgCbIwB2ArnABQCSAcgCoA0AagEEASgGEAEsICUAX3TSQPcAHtGpCDBQgAxOi5RKYdAaP0Abgjw0AhOjaZ0pGAEdGlR4YTp8SiAGsAOvQ62Pgw6IxgMKRggYE6esYA7kqkvjH0IQThkdEUgehG1LbcgdKBINJAA)
 
 ### key|multi
 
@@ -450,6 +507,14 @@ zaml.parse(source, 'title:str', {
   failOnUndefinedVars: true,
 })
 ```
+
+### caseInsensitiveKeys
+
+Setting this to `true` will allow users to write their config keys in a case-insensitive manner.
+
+### caseInsensitiveEnums
+
+Setting this to `true` will allow users to write [enum](#enum) values in any case.
 
 ## Spec
 
