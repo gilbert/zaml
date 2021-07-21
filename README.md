@@ -319,7 +319,7 @@ access_token abc123
 If you specify a `|req` within a basic-type hash block, it will make that block required.
 
 ```zaml
-# if your schema is { table: str {id:enum(INT,VARCHAR)} }
+# if your schema is { table: str{ id|req: enum(INT,VARCHAR) } }
 
 # This is invalid! It requires a block
 # table users
@@ -330,11 +330,11 @@ table users {
 }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAFwQIwDYzLpiYBO6wAlgCbIwB2ArnABQCSAcgCoA0AagEEASgGEAEsICUAX3TSQPcAHtGpCDBQgAxOi5RKYdAaP0Abgjw0AhOjaZ0pGAEdGlR4YTp8SiAGsAOvQ62Pgw6IxgMKRggYE6esYA7kqkvjH0IQThkdEUgehG1LbcgdKBINJAA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMABAFwQIwDYzLpiYBOGAlgCYA+pMAjkTAHYCucAFAJIByAKgBoAagEEASgGEAEhICU6AL5KQg8AHs2pCDBQgAxOn5QKYdKfMsAbgjzUAhOm6Z09Bmwr0zCdPnUQAawAdFkNsfBh0NjAYUjAQkMNjCwB3dVIA+JZwgiiYuPRgEPRzKicBEMUQkEUgA)
 
 ### key|multi
 
-Appending the `|multi` attribute to a key allows your users to specify it more than once. This is only affects [hash blocks](#hash-blocks).
+Appending the `|multi` attribute to a key allows your users to specify it more than once.
 
 ```zaml
 # if your schema is {project|multi:{title,type}}
@@ -418,12 +418,14 @@ sidebar {
 
 Note how a block changes the shape of the above parsed result. This allows you to use destructuring for each item:
 
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMMBLAJjARggJ2QG1YEcCAaAGwwDsBrZACjABcr2CBKAXQF8QlcAHsArgQgwU4bHkIACYAB06ChWQoKAyhjYxV62owUAJEXBiUFAekMLjDBQEFc4tgoCqYazYRuxNlV7TRgCFwgIcTogtQd6J20YNjZ6AHMfWwRI6LYbMGTUugzVflUQfiA)
+
 ```js
 var result = parse(source, schema)
 for (let [type, value] of result.sidebar) {
   //
   // `type` will be "header" or "link",
-  //  whereas `value` will be a string (for header) or an array (for link).
+  //  whereas `value` will be a string (for header) or an array of size 2 (for link).
   //
 }
 ```
