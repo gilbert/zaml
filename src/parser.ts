@@ -460,7 +460,7 @@ function calcBlockReq (block: Schema.Block): boolean {
   return Object.keys(block.schema).reduce((acc, key) => {
     if (acc) return acc
     return !! block.schema[key].req
-  }, false)
+  }, false as boolean)
 }
 
 function withVars (str: string, origin: Pos, opts: ParseOptions) {
