@@ -378,7 +378,7 @@ redirect 302, /old, /new
 
 [View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMATjAJgS0xAF2QAoA7AVzgBowD0a6BKAXxCvAHtz0IYURMufAQAEAZgAMAJhEB6DgBssc0jADuAHVIhmQA)
 
-Please note that tuples may only contain basic types (`str`, `num`, and `bool`). However, you're free to mix tuples with other features:
+Please note that tuples may only contain basic types (`str`, `num`, `bool`, and [enum](#enum)). However, you're free to mix tuples with other features:
 
 ```zaml
 # if your schema is {redirect|multi:(num,str,str){enableAt}}
