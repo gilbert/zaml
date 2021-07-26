@@ -15,7 +15,7 @@ import {
   whitespace,
 } from './util'
 
-export function parseSchema (source: string): Schema.Block {
+export function parseSchema (source: string): Schema.BlockT {
   try {
     var pos = new Pos()
     while (pos.skipWhitespace(source)) {}
@@ -37,7 +37,7 @@ export function parseSchema (source: string): Schema.Block {
   }
 }
 
-function parseBlock (source: string, pos: Pos): Schema.Block {
+function parseBlock (source: string, pos: Pos): Schema.BlockT {
   const start = pos.copy()
   const blockChar = source[pos.i]
 
@@ -47,7 +47,7 @@ function parseBlock (source: string, pos: Pos): Schema.Block {
 
   const endBlockChar = blockChar === '{' ? '}' : ']'
 
-  const result: Schema.Block = blockChar === '{'
+  const result: Schema.BlockT = blockChar === '{'
     ? { type: 'hash', schema: {} }
     : { type: 'array', schema: {} }
 
@@ -147,6 +147,43 @@ function readEnum (source: string, pos: Pos) {
   return source.substring(start, pos.i).trim()
 }
 
+function readEnumOptions(enumTypenamePos: Pos, source: string, pos: Pos) {
+  if (source[pos.i] !== '(') {
+    throw new ZamlError('syntax-error', pos, unexp(source[pos.i], ' (Did you forget a parenthesis?)'))
+  }
+  pos.newcol()
+  while (pos.skipWhitespace(source)) {}
+
+  const options: string[] = []
+
+  while (pos.i < source.length) {
+    var option = readEnum(source, pos)
+
+    if (option !== '') {
+      options.push(option)
+    }
+    while (pos.skipWhitespace(source)) {}
+
+    if (source[pos.i] === ',') {
+      pos.newcol()
+      while (pos.skipWhitespace(source)) {}
+    }
+    else if (source[pos.i] === ')') {
+      pos.newcol()
+      while (pos.skipWhitespace(source)) {}
+      break
+    }
+    else {
+      throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
+    }
+  }
+
+  if (options.length === 0) {
+    throw new ZamlError('user-error', enumTypenamePos, 'An enum type must have at least one option.')
+  }
+  return options
+}
+
 function readType (source: string, pos: Pos, targetChar: null | string): Schema.t {
   const c = source[pos.i]
 
@@ -209,39 +246,7 @@ function readType (source: string, pos: Pos, targetChar: null | string): Schema.
   }
 
   if (typename === 'enum') {
-    if (source[pos.i] !== '(') {
-      throw new ZamlError('syntax-error', pos, unexp(source[pos.i], ' (Did you forget a parenthesis?)'))
-    }
-    pos.newcol()
-    while (pos.skipWhitespace(source)) {}
-
-    var options: string[] = []
-
-    while (pos.i < source.length) {
-      var option = readEnum(source, pos)
-
-      if (option !== '') {
-        options.push(option)
-      }
-      while (pos.skipWhitespace(source)) {}
-
-      if (source[pos.i] === ',') {
-        pos.newcol()
-        while (pos.skipWhitespace(source)) {}
-      }
-      else if (source[pos.i] === ')') {
-        pos.newcol()
-        while (pos.skipWhitespace(source)) {}
-        break
-      }
-      else {
-        throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
-      }
-    }
-
-    if (options.length === 0) {
-      throw new ZamlError('user-error', typenamePos, 'An enum type must have at least one option.')
-    }
+    const options = readEnumOptions(typenamePos, source, pos)
 
     if (source[pos.i] === '{' || source[pos.i] === '[') {
       let block = parseBlock(source, pos)
@@ -295,8 +300,8 @@ function readType (source: string, pos: Pos, targetChar: null | string): Schema.
   throw new ZamlError('syntax-error', pos, unexp(source[pos.i]))
 }
 
-function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.BasicType[] {
-  var types: Schema.BasicType[] = []
+function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.TupleMemberType[] {
+  var types: Schema.TupleMemberType[] = []
 
   while (pos.i < source.length) {
     let c = source[pos.i]
@@ -310,11 +315,15 @@ function readTupleTypes (source: string, pos: Pos, openParenPos: Pos): Schema.Ba
 
     while (pos.skipWhitespace(source)) {}
 
-    if (name !== '') {
+    if (name === 'enum') {
+      const options = readEnumOptions(namePos, source, pos)
+      types.push({ type: 'enum', options })
+    }
+    else if (name !== '') {
       let type = basicTypeFromName(name)
 
       if (! type) {
-        throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, and bool.`)
+        throw new ZamlError('user-error', namePos, `Invalid tuple type '${name}'. Tuples may only contain str, num, bool, and enums.`)
       }
       types.push(type)
     }

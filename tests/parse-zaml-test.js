@@ -263,6 +263,18 @@ o("tuple", function () {
   })
 })
 
+o("tuple enum", function () {
+  var result = parse(`
+    feature_a on, Feature A
+    feature_b Feature B, off
+  `, '{feature_a:(enum(on,off),str), feature_b:(str, enum(on,off))}')
+
+  o(result).deepEquals({
+    feature_a: ['on', 'Feature A'],
+    feature_b: ['Feature B', 'off'],
+  })
+})
+
 o("tuple block", function () {
   var result = parse(`
     redirect 301, /old, /new {
@@ -322,7 +334,7 @@ o.spec("ParseOptions", function () {
 
   o("failOnUndefinedVars", function () {
     try {
-      var result = parse(`
+      parse(`
         x $A $B
       `, '{x}', {
         vars: { A: 'a' },

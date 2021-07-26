@@ -4,7 +4,7 @@ export type StringifyOptions = {
   indentDepth: number
 }
 
-export function stringify (data: any, blockSchema: Schema.Block, opts: StringifyOptions): string {
+export function stringify (data: any, blockSchema: Schema.BlockT, opts: StringifyOptions): string {
   const parts: string[] = []
 
   const seenMulti: Record<string,boolean> = {}

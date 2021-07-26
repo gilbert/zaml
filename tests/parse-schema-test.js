@@ -205,6 +205,24 @@ o.spec("Schema parsing", function () {
     })
   })
 
+  o("enum in tuple", function () {
+    o(p('{feature:(enum(on,off),str)}')).deepEquals({
+      type: 'hash',
+      schema: {
+        feature: {
+          type: 'tuple',
+          schema: [
+            {
+              type: 'enum',
+              options: ['on', 'off'],
+            },
+            { type: 'str' }
+          ],
+        }
+      }
+    })
+  })
+
   o("required key", function () {
     var result = p(`{x|req,y|req:num,z}`)
     o(result).deepEquals({

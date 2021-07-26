@@ -5,7 +5,7 @@ import {lex, parseZaml, ParseOptions} from './src/parser'
 
 export {parseSchema} from './src/schema'
 
-export function parse (source: string, schema: string | Schema.Block, options: ParseOptions={}) {
+export function parse (source: string, schema: string | Schema.BlockT, options: ParseOptions={}) {
   if (options.vars && Object.keys(options.vars).length === 0) {
     delete options.vars
   }
@@ -31,7 +31,7 @@ export type StringifyOptions = {
   indentDepth?: number
 }
 
-export function stringify (value: any, schema: string | Schema.Block, options: StringifyOptions={}) {
+export function stringify (value: any, schema: string | Schema.BlockT, options: StringifyOptions={}) {
   var opts: StringifyOptionsInternal = {
     indentDepth: options.indentDepth || 0
   }

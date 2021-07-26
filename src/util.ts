@@ -6,27 +6,39 @@ export const whitespace = /[ \t\n\r]/
 export const reservedOps = /[\^&#@~`]/
 export const trailingWhitespace = /[ \t\n\r]*$/
 
+type BasicType
+  = { type: 'num' }
+  | { type: 'str' }
+  | { type: 'bool' }
+
 export namespace Schema {
   type Common = { multi?: boolean, req?: boolean }
   type WithBlock = { block?: Block }
 
-  export type Hash  = { type: 'hash',  schema: Record<string,t>, req?: boolean }
-  export type Array = { type: 'array', schema: Record<string,t>, req?: boolean }
+  type Enum  = { type: 'enum', options: string[] }
+  type Hash  = { type: 'hash',  schema: Record<string,t>, req?: boolean }
+  type Array = { type: 'array', schema: Record<string,t>, req?: boolean }
 
-  export type Block = Hash | Array
+  type Block = Hash | Array
 
-  export type BasicType
-    = { type: 'num' }
-    | { type: 'str' }
-    | { type: 'bool' }
+  export type TupleMemberType
+    = BasicType
+    | Enum
+
+  export type BasicTypeT = BasicType & Common & WithBlock
+  export type BlockT = Block & Common
+  export type EnumT = Enum & Common
+  export type KvT = { type: 'kv' } & Common
+  export type ListT = { type: 'list', of: t } & Common
+  export type TupleT = { type: 'tuple', schema: TupleMemberType[] } & Common & WithBlock
 
   export type t
-    = BasicType & Common & WithBlock
-    | Block & Common
-    | { type: 'kv' } & Common
-    | { type: 'enum', options: string[] } & Common
-    | { type: 'list', of: t } & Common
-    | { type: 'tuple', schema: BasicType[] } & Common & WithBlock
+    = BasicTypeT
+    | BlockT
+    | EnumT
+    | KvT
+    | ListT
+    | TupleT
 }
 
 
@@ -34,9 +46,9 @@ export const validTypes = ['num', 'str', 'kv', 'list', 'bool', 'enum']
 export const LISTABLE_TYPES = ['str', 'num', 'enum']
 export const BLOCKABLE_TYPES = ['str', 'num', 'bool', 'tuple']
 
-export function basicTypeFromName (name: string): Schema.BasicType | null {
+export function basicTypeFromName (name: string): BasicType | null {
   if (name === 'num' || name === 'str' || name === 'bool') {
-    return { type: name } as Schema.BasicType
+    return { type: name } as BasicType
   }
   return null
 }

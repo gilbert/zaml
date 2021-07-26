@@ -144,7 +144,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
   return results
 }
 
-export function parseZaml (source: string, pos: Pos, blockSchema: Schema.Block, statements: Statement[], opts: ParseOptions): ParseResult {
+export function parseZaml (source: string, pos: Pos, blockSchema: Schema.BlockT, statements: Statement[], opts: ParseOptions): ParseResult {
   var result: any = blockSchema.type === 'array' ? [] : {}
 
   if (blockSchema.type === 'hash') {
@@ -219,18 +219,7 @@ function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOp
   }
   else if (t.type === 'enum') {
     parsedValue = withVars(s.args, s.pos, opts)
-
-    if ( opts.caseInsensitiveEnums && t.options.indexOf(parsedValue) === -1) {
-      var found = t.options.find(o => !! o.toLowerCase().match(parsedValue.toLowerCase()))
-      if ( found ) {
-        parsedValue = found
-      }
-    }
-
-    if (t.options.indexOf(parsedValue) === -1) {
-      throw new ZamlError('user-error', s.argsPos[0], `Invalid value: '${parsedValue
-      }'\n  Value must be one of: ${t.options.join(', ')}`)
-    }
+    parsedValue = parseEnumValue(parsedValue, s, t, opts)
   }
   else if (t.type === 'bool') {
     let val = withVars(s.args, s.pos, opts).toLowerCase()
@@ -321,6 +310,9 @@ function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOp
         }
         return arg === 'true'
       }
+      else if (t2.type === 'enum') {
+        return parseEnumValue(arg, s, t2, opts)
+      }
       else {
         throw new ZamlError('unexpected-error', pos,
           `Invalid tuple type '${JSON.stringify(t2)}' for arg '${JSON.stringify(arg)}' (Shouldn't be possible)`)
@@ -374,6 +366,22 @@ function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOp
   }
 
   return parsedValue
+}
+
+
+function parseEnumValue (value: string, s: Statement, t: Schema.EnumT, opts: ParseOptions) {
+  if ( opts.caseInsensitiveEnums && t.options.indexOf(value) === -1) {
+    var found = t.options.find(o => !! o.toLowerCase().match(value.toLowerCase()))
+    if ( found ) {
+      value = found
+    }
+  }
+
+  if (t.options.indexOf(value) === -1) {
+    throw new ZamlError('user-error', s.argsPos[0], `Invalid value: '${value
+    }'\n  Value must be one of: ${t.options.join(', ')}`)
+  }
+  return value
 }
 
 
@@ -456,7 +464,7 @@ function readWord (source: string, pos: Pos): string {
   return source.substring(start, pos.i)
 }
 
-function calcBlockReq (block: Schema.Block): boolean {
+function calcBlockReq (block: Schema.BlockT): boolean {
   return Object.keys(block.schema).reduce((acc, key) => {
     if (acc) return acc
     return !! block.schema[key].req
