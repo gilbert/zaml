@@ -182,6 +182,16 @@ o.spec("Parse Errors", function () {
     }
   })
 
+  o("no closing triple quote", function () {
+    try {
+      parse('foo """x', '{foo}')
+      o("Should not be successful").equals(false)
+    }
+    catch (err) {
+      checkError(err, 'syntax-error', 1, 5, /missing/i, /closing/i, /triple/i, /quotes/i)
+    }
+  })
+
   o("failOnUndefinedVars when vars is not set", function () {})
   o("accurate tuple boolean error", function () {})
 })

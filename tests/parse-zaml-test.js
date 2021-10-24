@@ -78,7 +78,9 @@ o("kv", function () {
     one {
       two {
         k1 v1
-        k2 v2
+        k2 """
+          v2
+        """
       }
     }
   `, '{one:{two:kv}}')
@@ -387,6 +389,53 @@ o.spec("Syntactic features", function () {
 
     o(result).deepEquals({ items: ['alice', 'big bob', 'robot', ' go  '] })
   })
+
+  o("multiline str", function () {
+    var result = parse(`
+      mstr """
+        line1
+          line2
+        line3
+      """
+      inlineMstr """x"""
+      foo 22
+    `, '{mstr,inlineMstr,foo:num}')
+
+    o(result).deepEquals({
+      mstr: `line1\n  line2\nline3`,
+      inlineMstr: 'x',
+      foo: 22,
+    })
+  })
+
+  o("multiline str tuple", function () {
+    var result = parse(`
+      leading """
+        line1
+          line2
+        line3
+      """, y
+      trailing x, """
+        line1
+          line2
+        line3
+      """
+      inlineBefore """x""", y
+      inlineAfter x, """y"""
+    `, `{
+      leading:(str,str),
+      trailing:(str,str),
+      inlineBefore:(str,str),
+      inlineAfter:(str,str),
+    }`)
+
+    o(result).deepEquals({
+      leading: [`line1\n  line2\nline3`, 'y'],
+      trailing: ['x', `line1\n  line2\nline3`],
+      inlineBefore: ['x', 'y'],
+      inlineAfter: ['x', 'y'],
+    })
+})
 
   o("comments", function () {
     var result = parse(`

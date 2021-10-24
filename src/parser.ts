@@ -1,6 +1,7 @@
 import {
   Pos,
   unexp,
+  dedent,
   Schema,
   ZamlError,
   brackets,
@@ -16,6 +17,7 @@ type Statement = {
   name: string
   args: string
   argsPos: [Pos,Pos]
+  mstrs: { [startPos_i: number]: Pos }
   block?: Statement[]
 }
 
@@ -84,13 +86,39 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
     while (pos.i < source.length && pos.skipSpace(source)) {}
 
     let argsPosStart = pos.copy()
+
     //
     // Read rest of the line
     //
+    let mstrs: Statement['mstrs'] = {}
     let argsPosEnd = argsPosStart
+
     while (pos.i < source.length) {
       let c2 = source[pos.i]
-      if (c2 === '\n') {
+      if (c2 === '"' && source[pos.i+1] === '"' && source[pos.i+2] === '"') {
+        // Read to end of multiline string
+        const mstrStart = pos.copy()
+
+        let foundClosing = false
+        pos.newcol().newcol().newcol()
+
+        while (pos.i < source.length) {
+          let c3 = source[pos.i]
+          if (c3 === '"' && source[pos.i+1] === '"' && source[pos.i+2] === '"') {
+            foundClosing = true
+            pos.newcol().newcol().newcol()
+            mstrs[mstrStart.i] = pos.copy()
+            break
+          }
+          else {
+            pos.push(source)
+          }
+        }
+        if (!foundClosing) {
+          throw new ZamlError('syntax-error', mstrStart, `Unexpected EOF: Missing closing triple quotes '"""'`)
+        }
+      }
+      else if (c2 === '\n') {
         argsPosEnd = pos.copy()
         pos.newline(source[pos.i+1] === '\r')
         break
@@ -122,6 +150,7 @@ export function lex (source: string, pos: Pos, inBlock=false): Statement[] {
       type: 'pre-statement',
       name: name,
       args: args,
+      mstrs,
       argsPos: [argsPosStart, argsPosEnd],
     }
     if (hasBlock) {
@@ -215,7 +244,7 @@ function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOp
     parsedValue = num
   }
   else if (t.type === 'str') {
-    parsedValue = withVars(s.args, s.pos, opts)
+    parsedValue = withVars(handleMultilineStr(s.args), s.pos, opts)
   }
   else if (t.type === 'enum') {
     parsedValue = withVars(s.args, s.pos, opts)
@@ -255,12 +284,13 @@ function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOp
     }
     else {
       // Inline list
-      parsedValue = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, _k, pos) => {
+      parsedValue = parseArgs(source, s.argsPos[0], s.argsPos[1], s.mstrs, opts, (arg, _k, pos) => {
         var fauxArgStatement: Statement = {
           args: arg,
           pos: pos,
           name: '', // This is not used
           type: 'pre-statement',
+          mstrs: {},
           argsPos: [pos, pos], // Hopefully we won't need the second one
         }
         return parseZamlValue(source, fauxArgStatement, t.of, opts)
@@ -274,7 +304,7 @@ function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOp
         if (s2.args === '') {
           throw new ZamlError('user-error', s2.argsPos[0], `Hash key '${s2.name}' requires a value.`)
         }
-        hash[ withVars(s2.name, s2.pos, opts)] = withVars(s2.args, s2.argsPos[0], opts)
+        hash[ withVars(s2.name, s2.pos, opts)] = withVars(handleMultilineStr(s2.args), s2.argsPos[0], opts)
       }
     }
     parsedValue = hash
@@ -286,7 +316,7 @@ function parseZamlValue(source: string, s: Statement, t: Schema.t, opts: ParseOp
     parsedValue = parseZaml(source, s.argsPos[1], t, s.block, opts)
   }
   else if (t.type === 'tuple') {
-    let args = parseArgs(source, s.argsPos[0], s.argsPos[1], opts, (arg, k, pos) => {
+    let args = parseArgs(source, s.argsPos[0], s.argsPos[1], s.mstrs, opts, (arg, k, pos) => {
       if (k >= t.schema.length) {
         let types = t.schema.map(t => t.type).join(' ')
         throw new ZamlError('user-error', pos,
@@ -406,6 +436,7 @@ function parseArgs (
   source: string,
   start: Pos,
   end: Pos,
+  mstrs: Statement['mstrs'],
   opts: ParseOptions,
   map: (arg: string, i: number, pos: Pos) => any = id
 ): string[] {
@@ -417,8 +448,16 @@ function parseArgs (
 
     // Quoted string
     if (c === '"') {
+      let arg = ''
       let start = pos.copy()
-      let arg = parseQuotedString(source, pos.newcol(), end)
+      let mstrEndPos = mstrs[pos.i]
+      if (mstrEndPos) {
+        arg = dedent(source.slice(pos.i+3, mstrEndPos.i-3))
+        pos.goto(mstrEndPos)
+      }
+      else {
+        arg = parseQuotedString(source, pos.newcol(), end)
+      }
       args.push(map(withVars(arg, start, opts), args.length, start))
     }
 
@@ -481,6 +520,12 @@ function withVars (str: string, origin: Pos, opts: ParseOptions) {
     }
     return val || ''
   })
+}
+
+function handleMultilineStr(str: string) {
+  return str.startsWith('"""')
+    ? dedent(str.slice(3, str.length-3))
+    : str
 }
 
 function id <T>(x: T) { return x }

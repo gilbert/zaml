@@ -115,6 +115,37 @@ function spacer (length: number) {
   return range(0, length).map(_ => ' ').join('')
 }
 
+// Taken and modified from https://github.com/dmnd/dedent
+export function dedent(string: string) {
+  const lines = string.split("\n")
+  let mindent = 0
+  lines.forEach(l => {
+    let m = l.match(/^(\s+)\S+/)
+    if (m) {
+      let indent = m[1].length
+      if (!mindent) {
+        // this is the first indented line
+        mindent = indent
+      } else {
+        mindent = Math.min(mindent, indent)
+      }
+    }
+  })
+
+  let result = ''
+
+  if (mindent !== null) {
+    const m = mindent // appease TS
+    result = lines.map(l => l[0] === " " ? l.slice(m) : l).join("\n")
+  }
+
+  return result
+    // dedent eats leading and trailing whitespace too
+    .trim()
+    // handle escaped newlines at the end to ensure they don't get stripped too
+    .replace(/\\n/g, "\n")
+}
+
 export class Pos {
   constructor(public line=1, public col=1, public i=0) {}
   push(source: string) {
@@ -133,6 +164,11 @@ export class Pos {
   }
   copy() {
     return new Pos(this.line, this.col, this.i)
+  }
+  goto(target: Pos) {
+    this.i = target.i
+    this.col = target.col
+    this.line = target.line
   }
   skipSpace(source: string): boolean {
     if (source[this.i] === ' ' || source[this.i] === '\t') {
