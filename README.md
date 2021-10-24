@@ -137,15 +137,22 @@ port 3000
 
 A `str` is the default type of any unspecified schema key. It accepts any character until it reaches a newline.
 
+If you need multiline strings, you can use triple quotes (`"""`). Zaml will also un-indent your string automatically, just like [Ruby squiggly heredoc](https://infinum.com/the-capsized-eight/multiline-strings-ruby-2-3-0-the-squiggly-heredoc).
+
 ```zaml
-# if your schema is {title} OR {title:str}
+# if your schema is {title,description} OR {title:str,description} OR etc.
 
 title You, Yourself, and U
+description """
+  A story
+    ...
+  about your mirror.
+"""
 
-#=> { "title": "You, Yourself, and U" }
+#=> { "title": "You, Yourself, and U", "description": "A story\n  ...\nabout your mirror." }
 ```
 
-[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgS3QGxgXxABpwB7AVwCcIYUQtcYACAPwHopS4Y24BPALQAHSqQBWAHQB2IfEA)
+[View this example in the online editor](https://gilbert.github.io/zaml/editor.html#s=N4IgzgxgFgpgtgQxALhMALgS3QGxgGgBMZIAnTABywHsA7AXxH3GoFdSIYUQtcYACAJpt8QtqTAwcAM1EJahfgFUAOgpIRyVTHX4qQ+w7X78AgvzDpqpAJ57jJ-gDoXakwgBGbdPxvj+cJikpNZOaoYGBrQg9EA)
 
 ### enum
 
